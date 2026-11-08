@@ -1,0 +1,8 @@
+22:01:37  Run started (Manual (GitHub Actions)) at 2026-11-08 22:01 UTC
+22:01:38  Settings loaded. Prompt: v1_warm | max jobs: 15
+22:01:53  Fetched 344 postings {'Himalayas': 240, 'RemoteOK': 99, 'Jobicy': 5}
+22:01:54  Keyword filter: 82 matched, 81 already processed, 1 new -> AI (0 deferred to next run)
+22:02:15  [1/1] Executive Assistant @ ResMed -> LEAD (@cf/openai/gpt-oss-120b (Cloudflare))
+22:02:16  Google Sheet updated: Leads, Rejected, Run Log.
+22:02:16  Run summary: {"Run Time (UTC)": "2026-11-08 22:01", "Trigger": "Manual (GitHub Actions)", "Fetched": 344, "Passed Keyword Filter": 82, "Already Seen": 81, "Checked by LLM": 1, "Leads Added": 1, "Rejected": 0, "LLM Errors": 0, "Backup AI Used": 2}
+22:02:16  Output: output/run-2026-11-08_2201.json (+ .log and CSV files)
