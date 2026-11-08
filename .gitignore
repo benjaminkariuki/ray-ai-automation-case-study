@@ -17,3 +17,6 @@ __pycache__/
 # Local run output (GitHub Actions commits each run to sample-output/latest)
 task1-job-outreach/output/
 .pytest_cache/
+
+# Private project notes
+map.md
