@@ -2,7 +2,7 @@
 
 [![Task 2 - Trip Briefs](https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/trip-briefs.yml/badge.svg)](https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/trip-briefs.yml)
 
-A Notion workspace where an Executive Assistant logs every trip in **one database**. Each trip gets an **automatically generated Trip Brief**: a mobile-friendly summary the founder can use before and during travel.
+A Notion workspace where an Executive Assistant logs every trip in **one database**. It's populated with **23 sample trips to Europe and the USA** for a New York-based founder. Each trip gets an **automatically generated Trip Brief**: a mobile-friendly summary the founder can use before and during travel.
 
 | | |
 |---|---|
@@ -19,7 +19,7 @@ A Notion workspace where an Executive Assistant logs every trip in **one databas
 | 1 | **Single Trips database** | The **Trips** table on the main page: one record per trip |
 | 2 | Trip name, who is traveling, date range | The **Trip**, **Traveler** and **Travel Dates** fields |
 | 3 | Flights, hotels, addresses, confirmations, meetings, notes | **Flights**, **Hotel**, **Hotel Address**, **Hotel Phone**, **Hotel Confirmation**, **Ground Transport**, **Itinerary** (meetings and every timed event) and **Notes** |
-| 4 | **Trip Brief**, auto-generated per trip | Open any trip (e.g. *London — Investor Roadshow*) and read the **✈️ Trip Brief** section |
+| 4 | **Trip Brief**, auto-generated per trip | Open any trip (e.g. *London — Investor Roadshow*, In-Progress this week) and read the **✈️ Trip Brief** section |
 | 5 | Chronological timeline of key events | Brief → **📅 Timeline**: grouped by day and sorted by time, with an icon for each event type |
 | 6 | Space to attach documents (tickets, visas) | The **Documents** field (file uploads), listed in the brief under **📎 Documents**, plus the **📂 Extra files & notes** area that's never overwritten |
 | 7 | Emergency and primary contact info | The red **🆘** box near the top of every brief |
@@ -98,7 +98,7 @@ Open the published page on any device, and tap a trip on the **Timeline** or **C
    cp .env.example .env          # set NOTION_TOKEN and NOTION_PAGE_URL
    python -m planner build --with-samples
    ```
-   This creates the guide, the Trips database, the 4 views, 5 sample trips and their briefs, and saves the ids to `workspace.json`.
+   This creates the guide, the Trips database, the 4 views, the 23 sample trips (Europe and USA) and their briefs, and saves the ids to `workspace.json`. Add `--reset` to rebuild the page from scratch.
 4. **Share → Publish → Publish to web** in Notion. This is the one step the API can't do.
 5. Optional, for automatic briefs: add the GitHub secret `NOTION_TOKEN` and the variable `NOTION_DATA_SOURCE_ID`. The schedule is in `.github/workflows/trip-briefs.yml`. To refresh by hand, run `python -m planner briefs` (or add `--all`).
 
@@ -108,9 +108,14 @@ Tests: `python -m pytest -q tests` covers itinerary parsing and sorting, the bri
 | Test | Result |
 |---|---|
 | Offline unit tests | ✅ 4/4 |
-| Build via the API: database, status groups, formula, 4 views, 5 trips, 5 briefs | ✅ |
+| Build via the API: database, status groups, formula, 4 views, 23 trips, 23 complete briefs (each checked for timeline, 🆘 contacts, stay, visa, documents) | ✅ |
+| Sample itineraries: every event falls between arrival and the flight home (0 conflicts in 23 trips) | ✅ |
+| Only Europe and USA destinations; statuses: 7 Done, 1 In-Progress, 15 Planned | ✅ |
 | Countdown formula: "15 days to go", "✈️ Travelling now", "✓ Completed" | ✅ |
 | Timeline sorted by date and time and grouped by day; bad lines kept in a ⚠️ box | ✅ |
 | Nothing changed → 0 briefs rebuilt; one trip edited → only that brief rebuilt | ✅ |
 | An EA note under "📂 Extra files & notes" survives a rebuild | ✅ |
 | GitHub Actions run of the refresher | ✅ |
+
+### Sample data
+23 trips (September 2026 – April 2027): 7 Done, 1 In-Progress (London, this week) and 15 Planned. Hotels and addresses are real; people, partner companies, booking numbers and `555` phone numbers are fictional. The attached PDFs are watermarked **SAMPLE**. The EA contact on every trip is Benjamin Kariuki (benjaminleyian50@gmail.com).
