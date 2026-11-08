@@ -1,3 +1,5 @@
 Run Time (UTC),Trigger,Fetched,Passed Keyword Filter,Already Seen,Checked by LLM,Leads Added,Rejected,LLM Errors,Backup AI Used
 2026-11-08 21:49,Manual (GitHub Actions),344,82,81,1,1,0,0,2
 2026-11-08 21:53,Manual (GitHub Actions),344,79,77,2,2,0,0,4
+2026-11-08 22:01,Manual (GitHub Actions),344,82,81,1,1,0,0,2
+2026-11-08 22:50,Manual (GitHub Actions),344,85,82,3,2,1,0,5

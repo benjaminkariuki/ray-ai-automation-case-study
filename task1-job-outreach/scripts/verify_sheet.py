@@ -57,12 +57,21 @@ def main():
     linkedin = [u for u in urls if "linkedin." in u.lower()]
     check("Compliant non-LinkedIn sources", sources <= ALLOWED_SOURCES and not linkedin, ", ".join(sorted(sources)))
     msgs = [r["LLM-Generated Outreach Message"] for r in leads]
-    personal = [r for r in leads if r["Company Name"].split()[0].lower() in r["LLM-Generated Outreach Message"].lower()
-                or any(w.lower() in r["LLM-Generated Outreach Message"].lower()
-                       for w in re.findall(r"[A-Za-z]{5,}", r["Job Description"])[:40])]
+    # Personalised = names the company, or shares >= 2 distinctive words (found in < 20% of all postings)
+    # with its own job description. Generic words like "calendar" or "assistant" do not count.
+    words = lambda t: set(w.lower() for w in re.findall(r"[A-Za-z][A-Za-z-]{4,}", t))  # noqa: E731
+    desc_words = [words(r["Job Description"] + " " + r["Job Title"]) for r in leads]
+    freq = {}
+    for ws in desc_words:
+        for w in ws:
+            freq[w] = freq.get(w, 0) + 1
+    limit = max(2, 0.2 * len(leads))
+    personal = [r for r, ws in zip(leads, desc_words)
+                if r["Company Name"].split()[0].lower() in r["LLM-Generated Outreach Message"].lower()
+                or len({w for w in ws if freq[w] < limit} & words(r["LLM-Generated Outreach Message"])) >= 2]
     check("Messages are unique", len(set(msgs)) == len(msgs), f"{len(set(msgs))} distinct messages")
     check("Messages reference the specific posting", len(personal) == len(leads),
-          f"{len(personal)}/{len(leads)} mention the company or details from the description")
+          f"{len(personal)}/{len(leads)} name the company or quote details found only in their own posting")
     prompts = sorted({r.get("Prompt Used", "") for r in leads} - {""})
     check("Prompt is interchangeable (tracked per lead)", len(prompts) >= 1, "prompts used: " + ", ".join(prompts))
     models = sorted({r.get("AI Model", "").split(" (")[-1].rstrip(")") for r in leads} - {""})

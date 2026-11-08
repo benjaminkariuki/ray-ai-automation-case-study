@@ -39,9 +39,9 @@ $ python scripts/verify_sheet.py
   [PASS] Required columns, in order: Job Posting URL, Job Title, Company Name, Location, Job Description, LLM-Generated Outreach Message
   [PASS] Leads present / No empty required fields / No duplicate jobs
   [PASS] Compliant non-LinkedIn sources: Himalayas, Jobicy
-  [PASS] Messages are unique / Messages reference the specific posting: 34/34
+  [PASS] Messages are unique / Messages reference the specific posting: 37/37
   [PASS] Prompt is interchangeable (tracked per lead): prompts used: v1_warm, v2_direct
-  [PASS] AI provider recorded per lead: providers: Cloudflare, OpenRouter
+  [PASS] AI provider recorded per lead
   [PASS] Every rejection failed a check / Automation ran in the last 30 hours / Latest run healthy
 12/12 checks passed.
 ```
@@ -209,6 +209,7 @@ That's it. It runs daily at 06:00 UTC.
 | `SHEET_ID is not set` or a credentials message | Missing `.env` value or GitHub secret | Fill in `.env` locally, or add the secret or variable in GitHub |
 | Google `PERMISSION_DENIED` / 404 | Sheet not shared with the service account, or wrong ID | Share as Editor and check the ID |
 | `Tab 'Leads' is missing columns` | Sheet created by an older version | Re-run `scripts/setup_sheet.py`, which adds the columns |
+| Want existing messages in a new tone | Prompts only affect new leads | `python scripts/rewrite_messages.py --rows 2 3 4` rewrites chosen rows with the current prompt |
 | Badge is red / failure email | One of: tests, run or Sheet check failed | Open the failed run in **Actions**; the failing step and its log show why |
 
 ---
@@ -227,6 +228,7 @@ That's it. It runs daily at 06:00 UTC.
 task1-job-outreach/
 ├── job_outreach/          # the Python package
 │   ├── sources.py         #   scrape: Himalayas, RemoteOK, Jobicy APIs → one job format
+│   ├── languages.py       #   language requirements for every posting (rule-based)
 │   ├── filters.py         #   keyword / company / age / duplicate filter
 │   ├── ai.py              #   validate + outreach, OpenRouter → Cloudflare failover, parsing, formatting
 │   ├── sheet.py           #   Google Sheets read/write
@@ -235,6 +237,7 @@ task1-job-outreach/
 ├── prompts/*.md           # default prompts (copied into the Sheet's Prompts tab)
 ├── scripts/setup_sheet.py # creates, formats and migrates the Google Sheet
 ├── scripts/verify_sheet.py# checks the live Sheet against the requirements (no login needed)
+├── scripts/rewrite_messages.py # re-writes existing messages after a prompt change
 ├── tests/                 # offline unit tests (filtering, parsing, formatting, failover)
 ├── sample-output/         # Sheet exports + latest/ (newest run, committed automatically)
 ├── docs/                  # TEST_REPORT.md + screenshots
