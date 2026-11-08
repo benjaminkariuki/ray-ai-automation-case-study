@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RAY Case Study – Benjamin Kariuki</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+  :root { --ink:#1b2333; --muted:#5b6475; --line:#dfe3ea; --accent:#1f4e8c; --soft:#f3f6fa; --ok:#1d7a46; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Inter, Arial, sans-serif; color: var(--ink); font-size: 10.2pt; line-height: 1.45; margin: 0; }
+  h1 { font-size: 21pt; margin: 0 0 2px; letter-spacing: -0.3px; }
+  h2 { font-size: 14.5pt; margin: 0 0 8px; padding-bottom: 5px; border-bottom: 2px solid var(--accent); color: var(--accent); }
+  h3 { font-size: 11pt; margin: 14px 0 6px; }
+  p { margin: 0 0 7px; }
+  a { color: var(--accent); text-decoration: none; word-break: break-all; }
+  .sub { color: var(--muted); margin-bottom: 14px; }
+  .links { background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin: 10px 0 16px; }
+  .links table td { padding: 3px 8px 3px 0; vertical-align: top; }
+  .links td:first-child { font-weight: 600; white-space: nowrap; width: 150px; }
+  table.grid { width: 100%; border-collapse: collapse; margin: 4px 0 10px; font-size: 9.4pt; }
+  table.grid th { background: var(--ink); color: #fff; text-align: left; padding: 5px 7px; font-weight: 600; }
+  table.grid td { border-bottom: 1px solid var(--line); padding: 5px 7px; vertical-align: top; }
+  table.grid tr:nth-child(even) td { background: #fafbfd; }
+  .tick { color: var(--ok); font-weight: 700; }
+  ul { margin: 0 0 8px 18px; padding: 0; } li { margin-bottom: 3px; }
+  .shot { width: 100%; border: 1px solid var(--line); border-radius: 6px; margin: 4px 0 2px; }
+  .cap { color: var(--muted); font-size: 8.6pt; margin-bottom: 10px; }
+  .stats { display: flex; gap: 8px; margin: 6px 0 10px; }
+  .stat { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; background: var(--soft); }
+  .stat b { display: block; font-size: 15pt; color: var(--accent); }
+  .stat span { font-size: 8.6pt; color: var(--muted); }
+  .msg { white-space: pre-wrap; font-size: 8.9pt; background: var(--soft); border-left: 3px solid var(--accent); padding: 8px 10px; border-radius: 4px; }
+  .page-break { break-before: page; }
+  h2, h3 { break-after: avoid; }
+  tr, .shot, .stats, .msg, li { break-inside: avoid; }
+  .muted { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<h1>RAY – AI Automation Engineer Case Study</h1>
+<div class="sub">Benjamin Kariuki · November 2026</div>
+
+<div class="links">
+  <table>
+    <tr><td>Code repository</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study">github.com/benjaminkariuki/ray-ai-automation-case-study</a></td></tr>
+    <tr><td>Task 1 – Google Sheet</td><td><a href="https://docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI">docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI</a></td></tr>
+    <tr><td>Task 1 – n8n workflow export</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study/blob/main/task1-job-outreach/workflow/job-outreach-workflow.json">task1-job-outreach/workflow/job-outreach-workflow.json</a></td></tr>
+    <tr><td>Task 1 – README / user guide</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study/tree/main/task1-job-outreach">task1-job-outreach/README.md</a></td></tr>
+    <tr><td>Task 1 – Sample output</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study/tree/main/task1-job-outreach/sample-output">task1-job-outreach/sample-output</a> (CSV + JSON)</td></tr>
+    <tr><td>Task 2 – Notion</td><td class="muted">Added in the next section</td></tr>
+  </table>
+</div>
+
+<h2>Task 1 – Executive Assistant Job Outreach Automation</h2>
+
+<h3>What I built</h3>
+<p>I built an <b>n8n workflow</b>, self-hosted on Azure with HTTPS. It runs <b>every day at 06:00 UTC</b>:</p>
+<ul>
+  <li>It pulls Executive Assistant and Admin Assistant postings from the public APIs of three job boards: <b>Himalayas, RemoteOK and Jobicy</b>. LinkedIn is not used.</li>
+  <li>An LLM (via <b>OpenRouter</b>, free models) checks that each posting is <b>remote, English-speaking and relevant</b>, and that it isn't a staffing agency.</li>
+  <li>A second LLM call writes a <b>personalised outreach email</b> for each match.</li>
+  <li>Everything goes into a <b>Google Sheet that sales reps use as their dashboard</b>.</li>
+</ul>
+<p>Filters, AI models and prompts are all <b>edited in the Sheet</b>, so tone can be tested without touching the workflow.</p>
+
+<img class="shot" src="../task1-job-outreach/docs/images/n8n-workflow.png" alt="n8n workflow">
+<div class="cap">The n8n workflow (33 nodes, 4 colour-coded stages): trigger and settings, fetch and filter, AI check and outreach, log and save.</div>
+
+<h3 class="page-break">How each requirement is met</h3>
+<table class="grid">
+  <tr><th style="width:24%">Requirement</th><th>How it's met</th></tr>
+  <tr><td><span class="tick">✓</span> Compliant, non-LinkedIn source</td><td>Three official public APIs (Himalayas, RemoteOK, Jobicy), with no HTML scraping. Each lead links to the original posting and names its source, as the boards' terms ask.</td></tr>
+  <tr><td><span class="tick">✓</span> Fields collected and stored</td><td>Job Title, Company, Location, Description, URL and Language Requirements, plus Source and Date Posted. Stored in the Sheet and as a <b>JSON file per run</b>; CSV exports are in the repo.</td></tr>
+  <tr><td><span class="tick">✓</span> Filter and validate (all 3)</td><td>A keyword, company and age pre-filter runs first. Then the LLM returns strict JSON: <code>is_remote</code>, <code>is_english</code>, <code>is_relevant</code>, <code>is_agency</code> and a reason. Only jobs passing all three checks are kept. Rejections are logged with the reason so they can be audited.</td></tr>
+  <tr><td><span class="tick">✓</span> Personalised LLM message</td><td>Each email cites specific duties or tools from that posting. The prompt allows facts about the company only from the posting, and facts about us only from the "About us" setting.</td></tr>
+  <tr><td><span class="tick">✓</span> Interchangeable prompt</td><td>Prompts live in the Sheet's <b>Prompts</b> tab. Changing <code>Settings → outreach_prompt</code> (for example <code>v1_warm</code> → <code>v2_direct</code>) switches the tone on the next run, and each lead records the <b>Prompt Used</b>.</td></tr>
+  <tr><td><span class="tick">✓</span> Google Sheets columns</td><td>The Leads tab has the 6 required columns in order, then Language, Source, Dates, Prompt Used, <b>Status</b> (a dropdown) and Notes.</td></tr>
+  <tr><td><span class="tick">✓</span> Scheduling</td><td>An n8n Schedule Trigger runs daily at 06:00 UTC on an always-on Azure VM. There's also a manual Execute button.</td></tr>
+  <tr><td><span class="tick">✓</span> README / user guide</td><td>Covers install (existing n8n, or one-command Azure deploy), running, changing filters and prompts, troubleshooting, and a guide for sales reps. A short guide is also built into the Sheet.</td></tr>
+</table>
+
+<h3>Results from live test runs</h3>
+<div class="stats">
+  <div class="stat"><b>264–359</b><span>postings fetched per run</span></div>
+  <div class="stat"><b>~55</b><span>pass the keyword filter</span></div>
+  <div class="stat"><b>15</b><span>new jobs checked by AI per run (configurable)</span></div>
+  <div class="stat"><b>10 leads</b><span>written in one run (GitLab, Pearson, Thrivent …)</span></div>
+</div>
+<img class="shot" src="../task1-job-outreach/docs/images/sheet-leads.png" alt="Leads tab">
+<div class="cap">The Leads tab in the Google Sheet: required columns, the AI-written message, and a Status dropdown for the sales rep.</div>
+
+<h3>Example of a generated message</h3>
+<div class="msg">Subject: GitLab Office of the CFO support
+
+I noticed you're looking for an Executive Assistant to support multiple Finance leaders across time zones, manage travel and expenses in Navan, and maintain shared Office of the CFO resources in Slack and Google Workspace. That mix of calendar complexity, policy-driven expense reconciliation, and cross-functional coordination is exactly what our assistants handle daily. …
+
+Would a 15-minute call this week be useful to see if we are a fit?</div>
+
+<h3>Key design decisions</h3>
+<ul>
+  <li><b>Cheap filter first, AI second.</b> Keyword rules remove about 85% of postings before any LLM call, so the workflow runs inside OpenRouter's free tier. A per-run cap protects the quota.</li>
+  <li><b>Agency detection.</b> Many remote EA postings come from VA and staffing agencies, which are competitors, not leads. They're excluded both by name and by the AI.</li>
+  <li><b>Reliability.</b> Jobs already in the Sheet are skipped, so there are no duplicates and no repeat AI cost. If an AI call fails (rate limit, outage), the job isn't saved and is retried automatically on the next run. A fallback model takes over when the main model is busy, and each job board fails independently of the others.</li>
+  <li><b>Transparency.</b> The <b>Rejected</b> tab shows Yes/No for each check with the AI's reason. The <b>Run Log</b> tab shows how many jobs were fetched, filtered, checked, added and errored on each run.</li>
+  <li><b>Editable by non-technical users.</b> Search terms, filters, models, sender details and prompts are all Sheet cells.</li>
+</ul>
+
+<h3>Process notes</h3>
+<p class="muted">
+  Code-node JavaScript is kept as readable files in <code>workflow/code/</code> and assembled into the importable workflow by <code>build_workflow.py</code>. <code>setup_sheet.py</code> builds the formatted Sheet in one command.
+  While testing, I tightened the prompts after the model invented details: once a language skill, once that our assistants already knew a client's tools. I also clarified that a time-zone requirement still counts as remote.
+  Free-tier models are occasionally rate-limited. The Run Log records this, and affected jobs are retried automatically.
+</p>
+
+<div class="page-break"></div>
+<h2>Task 2 – Executive Travel Planner (Notion)</h2>
+<p class="muted">To be completed.</p>
+
+</body>
+</html>
