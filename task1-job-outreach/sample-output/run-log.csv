@@ -1,0 +1,6 @@
+Run Time (UTC),Fetched,Passed Keyword Filter,Already Seen,Checked by LLM,Leads Added,Rejected,LLM Errors
+2026-11-08 19:34,359,56,0,3,0,3,0
+2026-11-08 19:37,359,60,7,3,0,3,0
+2026-11-08 19:44,359,58,9,12,6,6,0
+2026-11-08 19:49,359,47,10,15,10,4,1
+2026-11-08 20:08,264,55,30,15,0,3,10

@@ -1,0 +1,15 @@
+# Secrets (API keys, service-account keys, logins) are never committed
+.secrets/
+*.env
+.env
+service-account*.json
+
+# Brief and Office temp files
+*.docx
+~$*
+
+__pycache__/
+*.pyc
+
+# Local editor/agent settings
+.claude/

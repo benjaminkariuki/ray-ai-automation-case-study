@@ -1,0 +1,51 @@
+#cloud-config
+# Provisions an Ubuntu VM with Docker, n8n and Caddy (automatic HTTPS via Let's Encrypt).
+# __DOMAIN__ and __KEY__ are replaced by deploy-azure.sh before the VM is created.
+package_update: true
+packages: [ca-certificates, curl]
+write_files:
+  - path: /opt/n8n/docker-compose.yml
+    content: |
+      services:
+        n8n:
+          image: n8nio/n8n:2.47.2
+          restart: unless-stopped
+          environment:
+            - N8N_HOST=${N8N_DOMAIN}
+            - N8N_PROTOCOL=https
+            - N8N_PORT=5678
+            - WEBHOOK_URL=https://${N8N_DOMAIN}/
+            - GENERIC_TIMEZONE=UTC
+            - TZ=UTC
+            - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+            - N8N_DIAGNOSTICS_ENABLED=false
+            - N8N_RESTRICT_FILE_ACCESS_TO=/files
+            - N8N_PROXY_HOPS=1
+            - EXECUTIONS_DATA_PRUNE=true
+            - EXECUTIONS_DATA_MAX_AGE=336
+          volumes:
+            - n8n_data:/home/node/.n8n
+            - ./files:/files
+        caddy:
+          image: caddy:2
+          restart: unless-stopped
+          ports: ["80:80", "443:443"]
+          environment:
+            - N8N_DOMAIN=${N8N_DOMAIN}
+          volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile
+            - caddy_data:/data
+      volumes:
+        n8n_data: {}
+        caddy_data: {}
+  - path: /opt/n8n/Caddyfile
+    content: |
+      {$N8N_DOMAIN} {
+        reverse_proxy n8n:5678
+      }
+runcmd:
+  - fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  - curl -fsSL https://get.docker.com | sh
+  - mkdir -p /opt/n8n/files && chown 1000:1000 /opt/n8n/files
+  - printf 'N8N_DOMAIN=__DOMAIN__\nN8N_ENCRYPTION_KEY=__KEY__\n' > /opt/n8n/.env && chmod 600 /opt/n8n/.env
+  - cd /opt/n8n && docker compose up -d
