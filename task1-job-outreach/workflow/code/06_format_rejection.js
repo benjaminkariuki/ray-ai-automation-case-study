@@ -20,5 +20,6 @@ return $input.all()
       'Reason': j.verdict.reason,
       'Source': j.source,
       'Date Checked': today,
+      'AI Model': j.verdict.model,
     },
   }));

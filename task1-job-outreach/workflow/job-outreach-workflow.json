@@ -8,7 +8,7 @@
       "typeVersion": 1.2,
       "position": [
         0,
-        0
+        -40
       ],
       "parameters": {
         "rule": {
@@ -30,9 +30,41 @@
       "typeVersion": 1,
       "position": [
         0,
-        200
+        120
       ],
       "parameters": {}
+    },
+    {
+      "id": "28d5f254-7b98-51bb-b891-9247c0d6cbef",
+      "name": "Run now (link)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -220,
+        280
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "run-job-outreach",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "dc0fb1a2-4f1b-5810-9e36-d4166daec9ed"
+    },
+    {
+      "id": "c26d8b9d-dc5c-5ca6-bb55-7a375e01e88a",
+      "name": "Reply: run started",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        280
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Run started. New results appear in the Google Sheet (Leads, Rejected and Run Log tabs) in about 3 minutes.",
+        "options": {}
+      }
     },
     {
       "id": "85ee9a45-24b5-59e0-a157-c54cc3f9dc62",
@@ -51,12 +83,24 @@
               "name": "spreadsheetId",
               "value": "PASTE_YOUR_GOOGLE_SHEET_ID",
               "type": "string"
+            },
+            {
+              "id": "cd5abfee-1b4b-53e0-b6f1-8ee9f2589fbd",
+              "name": "cloudflareAccountId",
+              "value": "PASTE_YOUR_CLOUDFLARE_ACCOUNT_ID",
+              "type": "string"
+            },
+            {
+              "id": "fa3b01d5-2355-51b3-8902-8430ba0cce33",
+              "name": "trigger",
+              "type": "string",
+              "value": "={{ $('Daily at 06:00 UTC').isExecuted ? 'Schedule' : ($('Run now (link)').isExecuted ? 'Run-now link' : 'Manual') }}"
             }
           ]
         },
         "options": {}
       },
-      "notes": "Paste your Google Sheet ID here (the long code in the sheet URL).",
+      "notes": "Paste your Google Sheet ID and Cloudflare account ID here.",
       "notesInFlow": true
     },
     {
@@ -198,7 +242,7 @@
         100
       ],
       "parameters": {
-        "jsCode": "// Build Search Plan\n// Reads the Settings tab into a config object and emits one item per Himalayas search page.\n// The config travels on every item so later nodes can read it via $('Build Search Plan').first().json.config\n\nconst list = (v) => String(v || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);\n\nconst s = {};\nfor (const { json } of $('Read Settings').all()) {\n  if (json.Setting) s[String(json.Setting).trim()] = String(json.Value ?? '').trim();\n}\n\nconst prompts = {};\nfor (const { json } of $('Read Prompts').all()) {\n  if (json['Prompt Name']) prompts[String(json['Prompt Name']).trim()] = String(json['Prompt Text'] || '');\n}\n\nconst outreachPromptName = s.outreach_prompt || 'v1_warm';\nif (!prompts[outreachPromptName]) {\n  throw new Error(`Settings > outreach_prompt is \"${outreachPromptName}\" but no row with that Prompt Name exists in the Prompts tab.`);\n}\nif (!prompts.validation) throw new Error('The Prompts tab needs a row named \"validation\".');\n\nconst config = {\n  searchQueries: list(s.search_queries),\n  pagesPerQuery: Math.max(1, Math.min(5, parseInt(s.himalayas_pages_per_query, 10) || 2)),\n  includeKeywords: list(s.title_include_keywords),\n  excludeKeywords: list(s.title_exclude_keywords),\n  excludedCompanies: list(s.excluded_companies),\n  excludeAgencies: String(s.exclude_agencies || 'TRUE').toUpperCase() !== 'FALSE',\n  maxAgeDays: parseInt(s.max_posting_age_days, 10) || 30,\n  maxJobsPerRun: parseInt(s.max_jobs_per_run, 10) || 15,\n  validationModel: s.validation_model || 'nvidia/nemotron-3-ultra-550b-a55b:free',\n  outreachModel: s.outreach_model || 'nvidia/nemotron-3-ultra-550b-a55b:free',\n  fallbackModel: s.fallback_model || '',\n  outreachPromptName,\n  outreachPrompt: prompts[outreachPromptName],\n  validationPrompt: prompts.validation,\n  sender: {\n    sender_name: s.sender_name || '',\n    sender_company: s.sender_company || '',\n    sender_offer: s.sender_offer || '',\n    call_to_action: s.call_to_action || '',\n  },\n};\n\nif (!config.searchQueries.length) throw new Error('Settings > search_queries is empty.');\n\nconst out = [];\nfor (const q of config.searchQueries) {\n  for (let page = 1; page <= config.pagesPerQuery; page++) out.push({ json: { q, page, config } });\n}\nreturn out;\n"
+        "jsCode": "// Build Search Plan\n// Reads the Settings tab into a config object and emits one item per Himalayas search page.\n// The config travels on every item so later nodes can read it via $('Build Search Plan').first().json.config\n\nconst list = (v) => String(v || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);\n\nconst s = {};\nfor (const { json } of $('Read Settings').all()) {\n  if (json.Setting) s[String(json.Setting).trim()] = String(json.Value ?? '').trim();\n}\n\nconst prompts = {};\nfor (const { json } of $('Read Prompts').all()) {\n  if (json['Prompt Name']) prompts[String(json['Prompt Name']).trim()] = String(json['Prompt Text'] || '');\n}\n\nconst outreachPromptName = s.outreach_prompt || 'v1_warm';\nif (!prompts[outreachPromptName]) {\n  throw new Error(`Settings > outreach_prompt is \"${outreachPromptName}\" but no row with that Prompt Name exists in the Prompts tab.`);\n}\nif (!prompts.validation) throw new Error('The Prompts tab needs a row named \"validation\".');\n\nconst config = {\n  searchQueries: list(s.search_queries),\n  pagesPerQuery: Math.max(1, Math.min(5, parseInt(s.himalayas_pages_per_query, 10) || 2)),\n  includeKeywords: list(s.title_include_keywords),\n  excludeKeywords: list(s.title_exclude_keywords),\n  excludedCompanies: list(s.excluded_companies),\n  excludeAgencies: String(s.exclude_agencies || 'TRUE').toUpperCase() !== 'FALSE',\n  maxAgeDays: parseInt(s.max_posting_age_days, 10) || 30,\n  maxJobsPerRun: parseInt(s.max_jobs_per_run, 10) || 15,\n  validationModel: s.validation_model || 'nvidia/nemotron-3-ultra-550b-a55b:free',\n  outreachModel: s.outreach_model || 'nvidia/nemotron-3-ultra-550b-a55b:free',\n  fallbackModel: s.fallback_model || '',\n  backupModel: s.backup_model || '@cf/openai/gpt-oss-120b',\n  outreachPromptName,\n  outreachPrompt: prompts[outreachPromptName],\n  validationPrompt: prompts.validation,\n  sender: {\n    sender_name: s.sender_name || '',\n    sender_company: s.sender_company || '',\n    sender_offer: s.sender_offer || '',\n    call_to_action: s.call_to_action || '',\n  },\n};\n\nif (!config.searchQueries.length) throw new Error('Settings > search_queries is empty.');\n\nconst out = [];\nfor (const q of config.searchQueries) {\n  for (let page = 1; page <= config.pagesPerQuery; page++) out.push({ json: { q, page, config } });\n}\nreturn out;\n"
       }
     },
     {
@@ -359,7 +403,7 @@
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Prepare AI Check  (runs once per job)\n// Fills the validation prompt template from the Prompts tab with this job's details.\n\nconst config = $('Build Search Plan').first().json.config;\nconst fill = (tpl, vars) => tpl.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (m, k) => (k in vars ? String(vars[k]) : m));\n\nconst job = $json;\nreturn {\n  json: {\n    ...job,\n    validationRequest: {\n      models: [config.validationModel, config.fallbackModel].filter(Boolean),\n      temperature: 0,\n      response_format: { type: 'json_object' },\n      messages: [{\n        role: 'user',\n        content: fill(config.validationPrompt, {\n          job_title: job.title, company_name: job.company, location: job.location,\n          job_description: job.description.slice(0, 6000),\n        }),\n      }],\n    },\n  },\n};\n"
+        "jsCode": "// Prepare AI Check  (runs once per job)\n// Fills the validation prompt template from the Prompts tab with this job's details and builds\n// two requests: one for OpenRouter (primary) and one for Cloudflare Workers AI (backup).\n\nconst config = $('Build Search Plan').first().json.config;\nconst fill = (tpl, vars) => tpl.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (m, k) => (k in vars ? String(vars[k]) : m));\n\nconst job = $json;\nconst messages = [{\n  role: 'user',\n  content: fill(config.validationPrompt, {\n    job_title: job.title, company_name: job.company, location: job.location,\n    job_description: job.description.slice(0, 6000),\n  }),\n}];\n\nreturn {\n  json: {\n    ...job,\n    validationRequest: {\n      models: [config.validationModel, config.fallbackModel].filter(Boolean),\n      temperature: 0,\n      response_format: { type: 'json_object' },\n      messages,\n    },\n    validationBackup: { model: config.backupModel, temperature: 0, max_tokens: 1500, messages },\n  },\n};\n"
       }
     },
     {
@@ -409,9 +453,58 @@
         }
       },
       "retryOnFail": true,
-      "maxTries": 3,
+      "maxTries": 2,
       "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "0f03cad0-0401-5659-8edb-e6c840f4d79a",
+      "name": "Backup AI: Validate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2900,
+        160
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.cloudflare.com/client/v4/accounts/{{ $('Config').first().json.cloudflareAccountId }}/ai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Prepare AI Check').item.json.validationBackup) }}",
+        "options": {
+          "timeout": 120000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1000
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cloudflare-ai-token",
+          "name": "Cloudflare Workers AI token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
       "onError": "continueRegularOutput"
+    },
+    {
+      "id": "efcc0156-4790-5fbc-b756-6bb5b994781f",
+      "name": "Validation Result",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3120,
+        0
+      ],
+      "parameters": {}
     },
     {
       "id": "458e5e55-e67e-518e-99c2-77c195e6c758",
@@ -419,12 +512,12 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2900,
+        3340,
         0
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Parse AI Check  (runs once per job)\n// Reads the LLM's JSON verdict and decides: \"lead\" (all checks pass), \"rejected\", or \"error\"\n// (LLM failed -> job is NOT saved, so it is retried automatically on the next run).\n// For leads it also prepares the outreach prompt.\n\nconst config = $('Build Search Plan').first().json.config;\nconst job = $('Prepare AI Check').item.json;\nconst fill = (tpl, vars) => tpl.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (m, k) => (k in vars ? String(vars[k]) : m));\nconst bool = (v) => v === true || String(v).toLowerCase() === 'true';\n\nconst { validationRequest, ...base } = job;\nconst raw = $json.choices?.[0]?.message?.content;\nlet check = null;\nif (raw) {\n  const text = String(raw).replace(/<think>[\\s\\S]*?<\\/think>/g, '');\n  const match = text.match(/\\{[\\s\\S]*\\}/);\n  try { check = match ? JSON.parse(match[0]) : null; } catch (e) { check = null; }\n}\n\nif (!check) {\n  const why = $json.error ? JSON.stringify($json.error).slice(0, 300) : `Unreadable model reply: ${String(raw).slice(0, 200)}`;\n  return { json: { ...base, decision: 'error', error: why } };\n}\n\nconst verdict = {\n  remote: bool(check.is_remote),\n  english: bool(check.is_english),\n  relevant: bool(check.is_relevant),\n  agency: bool(check.is_agency),\n  languages: String(check.language_requirements || 'English'),\n  reason: String(check.reason || ''),\n  model: $json.model || '',\n};\nconst isLead = verdict.remote && verdict.english && verdict.relevant && !(config.excludeAgencies && verdict.agency);\n\nconst out = { ...base, verdict, decision: isLead ? 'lead' : 'rejected' };\nif (isLead) {\n  out.outreachRequest = {\n    models: [config.outreachModel, config.fallbackModel].filter(Boolean),\n    temperature: 0.7,\n    messages: [{\n      role: 'user',\n      content: fill(config.outreachPrompt, {\n        ...config.sender,\n        job_title: job.title, company_name: job.company, location: job.location,\n        language_requirements: verdict.languages, job_description: job.description.slice(0, 6000),\n      }),\n    }],\n  };\n}\nreturn { json: out };\n"
+        "jsCode": "// Parse AI Check  (runs once per job)\n// Reads the LLM's JSON verdict (from OpenRouter, or from the Cloudflare backup if OpenRouter failed)\n// and decides: \"lead\" (all checks pass), \"rejected\", or \"error\" (both AI providers failed -> the job\n// is NOT saved, so it is retried automatically on the next run).\n// For leads it also prepares the outreach requests (primary + backup).\n\nconst config = $('Build Search Plan').first().json.config;\nconst job = $('Prepare AI Check').item.json;\nconst fill = (tpl, vars) => tpl.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (m, k) => (k in vars ? String(vars[k]) : m));\nconst bool = (v) => v === true || String(v).toLowerCase() === 'true';\nconst provider = (model) => (String(model).startsWith('@cf/') ? 'Cloudflare' : 'OpenRouter');\n\nconst { validationRequest, validationBackup, ...base } = job;\nconst raw = $json.choices?.[0]?.message?.content;\nlet check = null;\nif (raw) {\n  const text = String(raw).replace(/<think>[\\s\\S]*?<\\/think>/g, '');\n  const match = text.match(/\\{[\\s\\S]*\\}/);\n  try { check = match ? JSON.parse(match[0]) : null; } catch (e) { check = null; }\n}\n\n// An incomplete answer (missing fields or no reason) is treated as an error, never as a rejection,\n// so a good job is never dropped because a model cut its reply short. It is retried next run.\nconst REQUIRED_KEYS = ['is_remote', 'is_english', 'is_relevant', 'is_agency', 'reason'];\nif (check && (REQUIRED_KEYS.some((k) => !(k in check)) || !String(check.reason).trim())) check = null;\n\nif (!check) {\n  const why = $json.error ? JSON.stringify($json.error).slice(0, 300) : `Unreadable or incomplete model reply: ${String(raw).slice(0, 200)}`;\n  return { json: { ...base, decision: 'error', error: why } };\n}\n\nconst model = $json.model || config.backupModel;\nconst verdict = {\n  remote: bool(check.is_remote),\n  english: bool(check.is_english),\n  relevant: bool(check.is_relevant),\n  agency: bool(check.is_agency),\n  languages: String(check.language_requirements || 'English'),\n  reason: String(check.reason || ''),\n  model: `${model} (${provider(model)})`,\n};\nconst isLead = verdict.remote && verdict.english && verdict.relevant && !(config.excludeAgencies && verdict.agency);\n\nconst out = { ...base, verdict, decision: isLead ? 'lead' : 'rejected' };\nif (isLead) {\n  const messages = [{\n    role: 'user',\n    content: fill(config.outreachPrompt, {\n      ...config.sender,\n      job_title: job.title, company_name: job.company, location: job.location,\n      language_requirements: verdict.languages, job_description: job.description.slice(0, 6000),\n    }),\n  }];\n  out.outreachRequest = { models: [config.outreachModel, config.fallbackModel].filter(Boolean), temperature: 0.7, messages };\n  out.outreachBackup = { model: config.backupModel, temperature: 0.7, max_tokens: 2500, messages };\n}\nreturn { json: out };\n"
       }
     },
     {
@@ -433,7 +526,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        3120,
+        3560,
         0
       ],
       "parameters": {
@@ -466,8 +559,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        3360,
-        -100
+        3800,
+        -140
       ],
       "parameters": {
         "method": "POST",
@@ -507,9 +600,58 @@
         }
       },
       "retryOnFail": true,
-      "maxTries": 3,
+      "maxTries": 2,
       "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "92aec803-1896-563d-9d9b-3df8141977f2",
+      "name": "Backup AI: Write Outreach",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4020,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.cloudflare.com/client/v4/accounts/{{ $('Config').first().json.cloudflareAccountId }}/ai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Is it a match?').item.json.outreachBackup) }}",
+        "options": {
+          "timeout": 120000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1000
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cloudflare-ai-token",
+          "name": "Cloudflare Workers AI token"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
       "onError": "continueRegularOutput"
+    },
+    {
+      "id": "6dc312fa-323f-54c3-ba64-d01482af9179",
+      "name": "Outreach Result",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4240,
+        -140
+      ],
+      "parameters": {}
     },
     {
       "id": "0c8dd37d-3dbf-5fbc-9430-8163853dcd2a",
@@ -517,11 +659,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3580,
-        -100
+        4460,
+        -140
       ],
       "parameters": {
-        "jsCode": "// Format Lead\n// Pairs each generated message with its job and maps it to the Leads tab columns.\n// If the LLM failed to write a message the job is skipped (and retried next run).\n\nconst config = $('Build Search Plan').first().json.config;\nconst today = new Date().toISOString().slice(0, 10);\n\nconst clean = (t) => String(t || '')\n  .replace(/<think>[\\s\\S]*?<\\/think>/g, '')\n  .replace(/^```[a-z]*\\n?|```$/gim, '')\n  .replace(/\\*\\*(.*?)\\*\\*/g, '$1')\n  .trim();\n\nreturn $input.all().flatMap((item, i) => {\n  const job = $('Is it a match?').itemMatching(i).json;\n  const message = clean(item.json.choices?.[0]?.message?.content);\n  if (!message || message.length < 80) return [];\n  return [{\n    json: {\n      'Job Posting URL': job.url,\n      'Job Title': job.title,\n      'Company Name': job.company,\n      'Location': job.location,\n      // One line keeps rows compact in the sheet; the full formatted text is in the run JSON.\n      'Job Description': job.description.replace(/\\s*\\n+\\s*/g, ' | ').replace(/^- /, ''),\n      'LLM-Generated Outreach Message': message,\n      'Language Requirements': job.verdict.languages,\n      'Source': job.source,\n      'Date Posted': job.datePosted,\n      'Date Found': today,\n      'Prompt Used': config.outreachPromptName,\n      'Status': 'New',\n      'Notes': '',\n    },\n  }];\n});\n"
+        "jsCode": "// Format Lead\n// Pairs each generated message (from OpenRouter or the Cloudflare backup) with its job and maps it\n// to the Leads tab columns. If both AI providers failed, the job is skipped and retried next run.\n\nconst config = $('Build Search Plan').first().json.config;\nconst today = new Date().toISOString().slice(0, 10);\nconst provider = (model) => (String(model).startsWith('@cf/') ? 'Cloudflare' : 'OpenRouter');\n\nconst clean = (t) => String(t || '')\n  .replace(/<think>[\\s\\S]*?<\\/think>/g, '')\n  .replace(/[\u2010\u2011]/g, '-').replace(/[\u00a0\u202f]/g, ' ') // non-breaking hyphens/spaces some models emit\n  .replace(/^```[a-z]*\\n?|```$/gim, '')\n  .replace(/\\*\\*(.*?)\\*\\*/g, '$1')\n  .trim();\n\nreturn $input.all().flatMap((item, i) => {\n  const job = $('Is it a match?').itemMatching(i).json;\n  let message = clean(item.json.choices?.[0]?.message?.content);\n  if (!message || message.length < 80) return [];\n  // Same ending whatever the model wrote: body, blank line, call to action, blank line, signature.\n  const { call_to_action: cta, sender_name: name, sender_company: company } = config.sender;\n  if (cta) message = message.split(cta).join('');\n  const signatureLines = [name, company].filter(Boolean).map((s) => s.trim());\n  message = message.split('\\n').map((l) => l.trimEnd()).filter((l) => !signatureLines.includes(l.trim()))\n    .join('\\n').replace(/\\n{3,}/g, '\\n\\n').trim();\n  message = [message, cta, signatureLines.join('\\n')].filter(Boolean).join('\\n\\n');\n  const model = item.json.model || config.backupModel;\n  return [{\n    json: {\n      'Job Posting URL': job.url,\n      'Job Title': job.title,\n      'Company Name': job.company,\n      'Location': job.location,\n      // One line keeps rows compact in the sheet; the full formatted text is in the run JSON.\n      'Job Description': job.description.replace(/\\s*\\n+\\s*/g, ' | ').replace(/^- /, ''),\n      'LLM-Generated Outreach Message': message,\n      'Language Requirements': job.verdict.languages,\n      'Source': job.source,\n      'Date Posted': job.datePosted,\n      'Date Found': today,\n      'Prompt Used': config.outreachPromptName,\n      'AI Model': `${model} (${provider(model)})`,\n      'Status': 'New',\n      'Notes': '',\n    },\n  }];\n});\n"
       }
     },
     {
@@ -530,8 +672,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        3800,
-        -100
+        4680,
+        -140
       ],
       "parameters": {
         "authentication": "serviceAccount",
@@ -569,11 +711,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3360,
-        120
+        3800,
+        200
       ],
       "parameters": {
-        "jsCode": "// Format Rejection\n// Maps jobs the AI rejected to the Rejected tab columns. LLM errors are dropped here\n// (not saved), so those jobs are automatically retried on the next run.\n\nconst today = new Date().toISOString().slice(0, 10);\nconst yn = (b) => (b ? 'Yes' : 'No');\n\nreturn $input.all()\n  .filter((i) => i.json.decision === 'rejected')\n  .map(({ json: j }) => ({\n    json: {\n      'Job Posting URL': j.url,\n      'Job Title': j.title,\n      'Company Name': j.company,\n      'Location': j.location,\n      'Remote': yn(j.verdict.remote),\n      'English': yn(j.verdict.english),\n      'Relevant': yn(j.verdict.relevant),\n      'Agency': yn(j.verdict.agency),\n      'Reason': j.verdict.reason,\n      'Source': j.source,\n      'Date Checked': today,\n    },\n  }));\n"
+        "jsCode": "// Format Rejection\n// Maps jobs the AI rejected to the Rejected tab columns. LLM errors are dropped here\n// (not saved), so those jobs are automatically retried on the next run.\n\nconst today = new Date().toISOString().slice(0, 10);\nconst yn = (b) => (b ? 'Yes' : 'No');\n\nreturn $input.all()\n  .filter((i) => i.json.decision === 'rejected')\n  .map(({ json: j }) => ({\n    json: {\n      'Job Posting URL': j.url,\n      'Job Title': j.title,\n      'Company Name': j.company,\n      'Location': j.location,\n      'Remote': yn(j.verdict.remote),\n      'English': yn(j.verdict.english),\n      'Relevant': yn(j.verdict.relevant),\n      'Agency': yn(j.verdict.agency),\n      'Reason': j.verdict.reason,\n      'Source': j.source,\n      'Date Checked': today,\n      'AI Model': j.verdict.model,\n    },\n  }));\n"
       }
     },
     {
@@ -582,8 +724,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        3580,
-        120
+        4020,
+        200
       ],
       "parameters": {
         "authentication": "serviceAccount",
@@ -616,16 +758,29 @@
       }
     },
     {
+      "id": "7bca66b2-976d-5396-8836-d2b5d8d8e761",
+      "name": "All done",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4900,
+        480
+      ],
+      "parameters": {
+        "numberInputs": 3
+      }
+    },
+    {
       "id": "8fd12383-e150-525b-928b-774b43b7dd9b",
       "name": "Summarize Run",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2240,
-        400
+        5120,
+        480
       ],
       "parameters": {
-        "jsCode": "// Summarize Run\n// Runs last (bottom branch). Counts what happened and builds the Run Log row.\n// Uses try/catch because branches with zero jobs never execute.\n\nconst count = (node, filter = () => true) => {\n  try { return $(node).all().filter(filter).length; } catch (e) { return 0; }\n};\nconst stats = $('Normalize & Filter').first().json.stats;\n\nreturn [{\n  json: {\n    'Run Time (UTC)': new Date().toISOString().replace('T', ' ').slice(0, 16),\n    'Fetched': stats.fetched,\n    'Passed Keyword Filter': stats.passedKeyword,\n    'Already Seen': stats.alreadySeen,\n    'Checked by LLM': stats.sentToLLM,\n    'Leads Added': count('Add to Leads'),\n    'Rejected': count('Add to Rejected'),\n    'LLM Errors': count('Parse AI Check', (i) => i.json.decision === 'error'),\n  },\n}];\n"
+        "jsCode": "// Summarize Run\n// Runs last (bottom branch). Counts what happened and builds the Run Log row.\n// Uses try/catch because branches with zero jobs never execute.\n\nconst count = (node, filter = () => true) => {\n  try { return $(node).all().filter(filter).length; } catch (e) { return 0; }\n};\nconst stats = $('Normalize & Filter').first().json.stats;\nconst cfOk = (i) => !i.json.error;\n\nreturn [{\n  json: {\n    'Run Time (UTC)': new Date().toISOString().replace('T', ' ').slice(0, 16),\n    'Trigger': $('Config').first().json.trigger || 'Manual',\n    'Fetched': stats.fetched,\n    'Passed Keyword Filter': stats.passedKeyword,\n    'Already Seen': stats.alreadySeen,\n    'Checked by LLM': stats.sentToLLM,\n    'Leads Added': count('Add to Leads'),\n    'Rejected': count('Add to Rejected'),\n    'LLM Errors': count('Parse AI Check', (i) => i.json.decision === 'error'),\n    'Backup AI Used': count('Backup AI: Validate', cfOk) + count('Backup AI: Write Outreach', cfOk),\n  },\n}];\n"
       }
     },
     {
@@ -634,8 +789,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2460,
-        400
+        5340,
+        480
       ],
       "parameters": {
         "authentication": "serviceAccount",
@@ -673,11 +828,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2680,
-        400
+        5560,
+        480
       ],
       "parameters": {
-        "jsCode": "// Build Run Report\n// Creates the structured JSON record of this run (every scraped posting + every AI decision)\n// which the next nodes save to disk as /files/job-run-<timestamp>.json\n\nconst safe = (node) => { try { return $(node).all().map((i) => i.json); } catch (e) { return []; } };\nconst norm = $('Normalize & Filter').first().json;\n\nconst decisions = safe('Parse AI Check').map(({ outreachRequest, description, ...j }) => j);\nconst messages = Object.fromEntries(safe('Format Lead').map((l) => [l['Job Posting URL'], l['LLM-Generated Outreach Message']]));\nfor (const d of decisions) if (messages[d.url]) d.outreachMessage = messages[d.url];\n\nreturn [{\n  json: {\n    runAt: new Date().toISOString(),\n    summary: $('Summarize Run').first().json,\n    stats: norm.stats,\n    decisions,\n    scraped: norm.scraped,\n  },\n}];\n"
+        "jsCode": "// Build Run Report\n// Creates the structured JSON record of this run (every scraped posting + every AI decision)\n// which the next nodes save to disk as /files/job-run-<timestamp>.json\n\nconst safe = (node) => { try { return $(node).all().map((i) => i.json); } catch (e) { return []; } };\nconst norm = $('Normalize & Filter').first().json;\n\nconst decisions = safe('Parse AI Check').map(({ outreachRequest, outreachBackup, description, ...j }) => j);\nconst messages = Object.fromEntries(safe('Format Lead').map((l) => [l['Job Posting URL'], l['LLM-Generated Outreach Message']]));\nfor (const d of decisions) if (messages[d.url]) d.outreachMessage = messages[d.url];\n\nreturn [{\n  json: {\n    runAt: new Date().toISOString(),\n    summary: $('Summarize Run').first().json,\n    stats: norm.stats,\n    decisions,\n    scraped: norm.scraped,\n  },\n}];\n"
       }
     },
     {
@@ -686,8 +841,8 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        2900,
-        400
+        5780,
+        480
       ],
       "parameters": {
         "operation": "toJson",
@@ -704,8 +859,8 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
       "position": [
-        3120,
-        400
+        6000,
+        480
       ],
       "parameters": {
         "operation": "write",
@@ -721,13 +876,13 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -80,
+        -300,
         -280
       ],
       "parameters": {
-        "content": "## 1. Trigger + load settings\nRuns daily at 06:00 UTC (or manually). Reads **Settings**, **Prompts** and already-processed URLs from the Google Sheet. Edit the sheet, not this workflow, to change filters, models or prompts.",
-        "width": 1540,
-        "height": 640,
+        "content": "## 1. Trigger + load settings\nRuns daily at 06:00 UTC, manually, or via the **Run now** link. Reads **Settings**, **Prompts** and already-processed URLs from the Google Sheet. Edit the sheet, not this workflow, to change filters, models or prompts.",
+        "width": 1760,
+        "height": 760,
         "color": 7
       }
     },
@@ -757,9 +912,9 @@
         -280
       ],
       "parameters": {
-        "content": "## 3. AI (OpenRouter)\nLLM 1 verifies **remote + English + relevant** (and not an agency). Matches get a personalised message from LLM 2 and go to **Leads**; the rest go to **Rejected** with the reason.",
-        "width": 1780,
-        "height": 600,
+        "content": "## 3. AI: OpenRouter (primary) + Cloudflare Workers AI (backup)\nLLM 1 verifies **remote + English + relevant** (and not an agency). Matches get a personalised message from LLM 2 and go to **Leads**; the rest go to **Rejected** with the reason. If OpenRouter fails or hits its limit, the job is sent to the Cloudflare backup automatically.",
+        "width": 2640,
+        "height": 660,
         "color": 4
       }
     },
@@ -769,13 +924,13 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2220,
-        340
+        4860,
+        300
       ],
       "parameters": {
-        "content": "## 4. Log + save\nAdds a row to **Run Log** and saves the full run as JSON on the server (/files).",
-        "width": 1120,
-        "height": 260,
+        "content": "## 4. Log + save (runs last)\n**All done** waits for every sheet write, then adds a row to **Run Log** and saves the full run as JSON on the server (/files).",
+        "width": 1300,
+        "height": 340,
         "color": 3
       }
     }
@@ -793,6 +948,28 @@
       ]
     },
     "Run manually": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run now (link)": {
+      "main": [
+        [
+          {
+            "node": "Reply: run started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply: run started": {
       "main": [
         [
           {
@@ -932,7 +1109,7 @@
             "index": 0
           },
           {
-            "node": "Summarize Run",
+            "node": "All done",
             "type": "main",
             "index": 0
           }
@@ -961,7 +1138,7 @@
         ]
       ]
     },
-    "AI: Validate Job": {
+    "Validation Result": {
       "main": [
         [
           {
@@ -983,7 +1160,7 @@
         ]
       ]
     },
-    "AI: Write Outreach": {
+    "Outreach Result": {
       "main": [
         [
           {
@@ -1016,6 +1193,64 @@
         ]
       ]
     },
+    "AI: Validate Job": {
+      "main": [
+        [
+          {
+            "node": "Validation Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Backup AI: Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backup AI: Validate": {
+      "main": [
+        [
+          {
+            "node": "Validation Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI: Write Outreach": {
+      "main": [
+        [
+          {
+            "node": "Outreach Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Backup AI: Write Outreach",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backup AI: Write Outreach": {
+      "main": [
+        [
+          {
+            "node": "Outreach Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
     "Is it a match?": {
       "main": [
         [
@@ -1028,6 +1263,39 @@
         [
           {
             "node": "Format Rejection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to Leads": {
+      "main": [
+        [
+          {
+            "node": "All done",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Add to Rejected": {
+      "main": [
+        [
+          {
+            "node": "All done",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "All done": {
+      "main": [
+        [
+          {
+            "node": "Summarize Run",
             "type": "main",
             "index": 0
           }

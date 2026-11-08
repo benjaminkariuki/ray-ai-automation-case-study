@@ -19,9 +19,10 @@ def nid(name):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, "ray-job-outreach/" + name))
 
 
-def build(sheet_id, gcred, orcred):
+def build(sheet_id, gcred, orcred, cfcred, cf_account, webhook_path):
     google_cred = {"googleApi": {"id": gcred, "name": "Google Sheets (service account)"}}
     or_cred = {"httpHeaderAuth": {"id": orcred, "name": "OpenRouter API key"}}
+    cf_cred = {"httpHeaderAuth": {"id": cfcred, "name": "Cloudflare Workers AI token"}}
     doc = {"__rl": True, "value": "={{ $('Config').first().json.spreadsheetId }}", "mode": "id"}
     nodes, conns = [], {}
 
@@ -63,6 +64,7 @@ def build(sheet_id, gcred, orcred):
             retryOnFail=True, maxTries=3, waitBetweenTries=5000, onError="continueRegularOutput", **extra)
 
     def llm(name, field, pos):
+        """Primary AI call (OpenRouter). Failed items leave through the 2nd (error) output to the backup."""
         return node(name, "n8n-nodes-base.httpRequest", 4.2, pos, {
             "method": "POST", "url": "https://openrouter.ai/api/v1/chat/completions",
             "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
@@ -71,17 +73,41 @@ def build(sheet_id, gcred, orcred):
                 {"name": "X-Title", "value": "RAY Job Outreach"}]},
             "sendBody": True, "specifyBody": "json", "jsonBody": "={{ JSON.stringify($json." + field + ") }}",
             "options": {"timeout": 120000, "batching": {"batch": {"batchSize": 1, "batchInterval": 4000}}}},
-            credentials=or_cred, retryOnFail=True, maxTries=3, waitBetweenTries=5000, onError="continueRegularOutput")
+            credentials=or_cred, retryOnFail=True, maxTries=2, waitBetweenTries=5000, onError="continueErrorOutput")
+
+    def backup_llm(name, source_node, field, pos):
+        """Backup AI call (Cloudflare Workers AI, OpenAI-compatible endpoint). Only receives failed items."""
+        return node(name, "n8n-nodes-base.httpRequest", 4.2, pos, {
+            "method": "POST",
+            "url": "=https://api.cloudflare.com/client/v4/accounts/{{ $('Config').first().json.cloudflareAccountId }}/ai/v1/chat/completions",
+            "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+            "sendBody": True, "specifyBody": "json",
+            "jsonBody": "={{ JSON.stringify($('" + source_node + "').item.json." + field + ") }}",
+            "options": {"timeout": 120000, "batching": {"batch": {"batchSize": 1, "batchInterval": 1000}}}},
+            credentials=cf_cred, retryOnFail=True, maxTries=2, waitBetweenTries=3000, onError="continueRegularOutput")
 
     # --- Triggers & config -------------------------------------------------
-    node("Daily at 06:00 UTC", "n8n-nodes-base.scheduleTrigger", 1.2, [0, 0],
+    node("Daily at 06:00 UTC", "n8n-nodes-base.scheduleTrigger", 1.2, [0, -40],
          {"rule": {"interval": [{"field": "days", "daysInterval": 1, "triggerAtHour": 6, "triggerAtMinute": 0}]}})
-    node("Run manually", "n8n-nodes-base.manualTrigger", 1, [0, 200], {})
+    node("Run manually", "n8n-nodes-base.manualTrigger", 1, [0, 120], {})
+    node("Run now (link)", "n8n-nodes-base.webhook", 2, [-220, 280],
+         {"httpMethod": "GET", "path": webhook_path, "responseMode": "responseNode", "options": {}},
+         webhookId=nid("webhook-run-now"))
+    node("Reply: run started", "n8n-nodes-base.respondToWebhook", 1.1, [0, 280], {
+        "respondWith": "text",
+        "responseBody": "Run started. New results appear in the Google Sheet (Leads, Rejected and Run Log tabs) in about 3 minutes.",
+        "options": {}})
     node("Config", "n8n-nodes-base.set", 3.4, [220, 100], {
-        "assignments": {"assignments": [{"id": nid("cfg-sheet"), "name": "spreadsheetId", "value": sheet_id, "type": "string"}]},
-        "options": {}}, notes="Paste your Google Sheet ID here (the long code in the sheet URL).", notesInFlow=True)
+        "assignments": {"assignments": [
+            {"id": nid("cfg-sheet"), "name": "spreadsheetId", "value": sheet_id, "type": "string"},
+            {"id": nid("cfg-cf"), "name": "cloudflareAccountId", "value": cf_account, "type": "string"},
+            {"id": nid("cfg-trigger"), "name": "trigger", "type": "string",
+             "value": "={{ $('Daily at 06:00 UTC').isExecuted ? 'Schedule' : ($('Run now (link)').isExecuted ? 'Run-now link' : 'Manual') }}"}]},
+        "options": {}}, notes="Paste your Google Sheet ID and Cloudflare account ID here.", notesInFlow=True)
     link("Daily at 06:00 UTC", "Config")
     link("Run manually", "Config")
+    link("Run now (link)", "Reply: run started")
+    link("Reply: run started", "Config")
 
     sheet_read("Read Settings", "Settings", [440, 100])
     sheet_read("Read Prompts", "Prompts", [660, 100], executeOnce=True)
@@ -107,50 +133,69 @@ def build(sheet_id, gcred, orcred):
     node("Split Jobs", "n8n-nodes-base.splitOut", 1, [2240, 0], {"fieldToSplitOut": "candidates", "options": {}})
     code("Prepare AI Check", "03_prepare_ai_check.js", [2460, 0], mode="runOnceForEachItem")
     llm("AI: Validate Job", "validationRequest", [2680, 0])
-    code("Parse AI Check", "04_parse_ai_check.js", [2900, 0], mode="runOnceForEachItem")
-    node("Is it a match?", "n8n-nodes-base.if", 2.2, [3120, 0], {
+    backup_llm("Backup AI: Validate", "Prepare AI Check", "validationBackup", [2900, 160])
+    node("Validation Result", "n8n-nodes-base.merge", 3.2, [3120, 0], {})
+    code("Parse AI Check", "04_parse_ai_check.js", [3340, 0], mode="runOnceForEachItem")
+    node("Is it a match?", "n8n-nodes-base.if", 2.2, [3560, 0], {
         "conditions": {"options": {"caseSensitive": True, "leftValue": "", "typeValidation": "strict", "version": 2},
                        "conditions": [{"id": nid("if-lead"), "leftValue": "={{ $json.decision }}", "rightValue": "lead",
                                        "operator": {"type": "string", "operation": "equals"}}],
                        "combinator": "and"}, "options": {}})
-    llm("AI: Write Outreach", "outreachRequest", [3360, -100])
-    code("Format Lead", "05_format_lead.js", [3580, -100])
-    sheet_append("Add to Leads", "Leads", [3800, -100])
-    code("Format Rejection", "06_format_rejection.js", [3360, 120])
-    sheet_append("Add to Rejected", "Rejected", [3580, 120])
+    llm("AI: Write Outreach", "outreachRequest", [3800, -140])
+    backup_llm("Backup AI: Write Outreach", "Is it a match?", "outreachBackup", [4020, 0])
+    node("Outreach Result", "n8n-nodes-base.merge", 3.2, [4240, -140], {})
+    code("Format Lead", "05_format_lead.js", [4460, -140])
+    sheet_append("Add to Leads", "Leads", [4680, -140])
+    code("Format Rejection", "06_format_rejection.js", [3800, 200])
+    sheet_append("Add to Rejected", "Rejected", [4020, 200])
     for a, b in [("Normalize & Filter", "Split Jobs"), ("Split Jobs", "Prepare AI Check"), ("Prepare AI Check", "AI: Validate Job"),
-                 ("AI: Validate Job", "Parse AI Check"), ("Parse AI Check", "Is it a match?"),
-                 ("AI: Write Outreach", "Format Lead"), ("Format Lead", "Add to Leads"), ("Format Rejection", "Add to Rejected")]:
+                 ("Validation Result", "Parse AI Check"), ("Parse AI Check", "Is it a match?"),
+                 ("Outreach Result", "Format Lead"), ("Format Lead", "Add to Leads"), ("Format Rejection", "Add to Rejected")]:
         link(a, b)
+    # Primary success -> result; primary failure (error output) -> backup -> result
+    link("AI: Validate Job", "Validation Result", out=0, inp=0)
+    link("AI: Validate Job", "Backup AI: Validate", out=1)
+    link("Backup AI: Validate", "Validation Result", inp=1)
+    link("AI: Write Outreach", "Outreach Result", out=0, inp=0)
+    link("AI: Write Outreach", "Backup AI: Write Outreach", out=1)
+    link("Backup AI: Write Outreach", "Outreach Result", inp=1)
     link("Is it a match?", "AI: Write Outreach", out=0)
     link("Is it a match?", "Format Rejection", out=1)
 
-    # --- Logging branch (bottom: runs after the AI branch finishes) ----------
-    code("Summarize Run", "07_summarize_run.js", [2240, 400])
-    sheet_append("Log Run", "Run Log", [2460, 400])
-    code("Build Run Report", "08_build_run_report.js", [2680, 400])
-    node("Convert to JSON File", "n8n-nodes-base.convertToFile", 1.1, [2900, 400], {
+    # --- Logging (runs last) ---------------------------------------------------
+    # "All done" waits for the filter step AND both sheet writes, so the log is written after everything else,
+    # and still runs when there were no new jobs (input 1 always receives the Normalize item).
+    node("All done", "n8n-nodes-base.merge", 3.2, [4900, 480], {"numberInputs": 3})
+    link("Normalize & Filter", "All done", inp=0)
+    link("Add to Leads", "All done", inp=1)
+    link("Add to Rejected", "All done", inp=2)
+    code("Summarize Run", "07_summarize_run.js", [5120, 480])
+    sheet_append("Log Run", "Run Log", [5340, 480])
+    code("Build Run Report", "08_build_run_report.js", [5560, 480])
+    node("Convert to JSON File", "n8n-nodes-base.convertToFile", 1.1, [5780, 480], {
         "operation": "toJson", "mode": "once",
         "options": {"fileName": "=job-run-{{ $now.toFormat('yyyy-MM-dd_HHmm') }}.json", "format": True}})
-    node("Save Run File", "n8n-nodes-base.readWriteFile", 1, [3120, 400], {
+    node("Save Run File", "n8n-nodes-base.readWriteFile", 1, [6000, 480], {
         "operation": "write", "fileName": "=/files/job-run-{{ $now.toFormat('yyyy-MM-dd_HHmm') }}.json",
         "dataPropertyName": "data", "options": {}}, onError="continueRegularOutput")
-    for a, b in [("Normalize & Filter", "Summarize Run"), ("Summarize Run", "Log Run"), ("Log Run", "Build Run Report"),
+    for a, b in [("All done", "Summarize Run"), ("Summarize Run", "Log Run"), ("Log Run", "Build Run Report"),
                  ("Build Run Report", "Convert to JSON File"), ("Convert to JSON File", "Save Run File")]:
         link(a, b)
 
     stickies = [
-        ("1. Load settings from the Google Sheet", [-80, -280], 1540, 640, 7,
-         "## 1. Trigger + load settings\nRuns daily at 06:00 UTC (or manually). Reads **Settings**, **Prompts** and "
-         "already-processed URLs from the Google Sheet. Edit the sheet, not this workflow, to change filters, models or prompts."),
+        ("1. Load settings from the Google Sheet", [-300, -280], 1760, 760, 7,
+         "## 1. Trigger + load settings\nRuns daily at 06:00 UTC, manually, or via the **Run now** link. Reads **Settings**, "
+         "**Prompts** and already-processed URLs from the Google Sheet. Edit the sheet, not this workflow, to change filters, models or prompts."),
         ("2. Fetch + filter jobs", [1500, -280], 680, 760, 5,
          "## 2. Fetch + filter jobs\nPublic APIs: Himalayas (search), RemoteOK, Jobicy. "
          "Normalised to one schema, then keyword / company / age filter and duplicate check."),
-        ("3. AI check + outreach", [2220, -280], 1780, 600, 4,
-         "## 3. AI (OpenRouter)\nLLM 1 verifies **remote + English + relevant** (and not an agency). "
-         "Matches get a personalised message from LLM 2 and go to **Leads**; the rest go to **Rejected** with the reason."),
-        ("4. Log the run", [2220, 340], 1120, 260, 3,
-         "## 4. Log + save\nAdds a row to **Run Log** and saves the full run as JSON on the server (/files)."),
+        ("3. AI check + outreach", [2220, -280], 2640, 660, 4,
+         "## 3. AI: OpenRouter (primary) + Cloudflare Workers AI (backup)\nLLM 1 verifies **remote + English + relevant** "
+         "(and not an agency). Matches get a personalised message from LLM 2 and go to **Leads**; the rest go to **Rejected** "
+         "with the reason. If OpenRouter fails or hits its limit, the job is sent to the Cloudflare backup automatically."),
+        ("4. Log the run", [4860, 300], 1300, 340, 3,
+         "## 4. Log + save (runs last)\n**All done** waits for every sheet write, then adds a row to **Run Log** "
+         "and saves the full run as JSON on the server (/files)."),
     ]
     for title, pos, w, h, color, text in stickies:
         nodes.append({"id": nid("sticky-" + title), "name": title, "type": "n8n-nodes-base.stickyNote", "typeVersion": 1,
@@ -167,8 +212,11 @@ if __name__ == "__main__":
     ap.add_argument("--sheet-id", default="PASTE_YOUR_GOOGLE_SHEET_ID")
     ap.add_argument("--google-cred-id", default="google-sheets-sa")
     ap.add_argument("--openrouter-cred-id", default="openrouter-key")
+    ap.add_argument("--cloudflare-cred-id", default="cloudflare-ai-token")
+    ap.add_argument("--cloudflare-account", default="PASTE_YOUR_CLOUDFLARE_ACCOUNT_ID")
+    ap.add_argument("--webhook-path", default="run-job-outreach")
     ap.add_argument("--out", default=str(OUT))
     a = ap.parse_args()
-    wf = build(a.sheet_id, a.google_cred_id, a.openrouter_cred_id)
+    wf = build(a.sheet_id, a.google_cred_id, a.openrouter_cred_id, a.cloudflare_cred_id, a.cloudflare_account, a.webhook_path)
     pathlib.Path(a.out).write_text(json.dumps(wf, indent=2), encoding="utf-8")
     print("Wrote", a.out)

@@ -21,15 +21,15 @@ PROMPTS = ROOT / "prompts"
 LEADS_HEADERS = [
     "Job Posting URL", "Job Title", "Company Name", "Location", "Job Description",
     "LLM-Generated Outreach Message", "Language Requirements", "Source", "Date Posted",
-    "Date Found", "Prompt Used", "Status", "Notes",
+    "Date Found", "Prompt Used", "AI Model", "Status", "Notes",
 ]
 REJECTED_HEADERS = [
     "Job Posting URL", "Job Title", "Company Name", "Location", "Remote", "English",
-    "Relevant", "Agency", "Reason", "Source", "Date Checked",
+    "Relevant", "Agency", "Reason", "Source", "Date Checked", "AI Model",
 ]
 RUNLOG_HEADERS = [
-    "Run Time (UTC)", "Fetched", "Passed Keyword Filter", "Already Seen", "Checked by LLM",
-    "Leads Added", "Rejected", "LLM Errors",
+    "Run Time (UTC)", "Trigger", "Fetched", "Passed Keyword Filter", "Already Seen", "Checked by LLM",
+    "Leads Added", "Rejected", "LLM Errors", "Backup AI Used",
 ]
 STATUSES = ["New", "Contacted", "Replied", "Meeting Booked", "Not a Fit"]
 STATUS_COLORS = {  # soft fills so the sheet stays readable
@@ -41,7 +41,7 @@ SETTINGS = [
     ["Setting", "Value", "What it does"],
     ["search_queries", "executive assistant, administrative assistant, admin assistant, personal assistant",
      "Comma-separated searches sent to Himalayas (RemoteOK uses its 'assistant' tag, Jobicy its 'Admin & Support' category)."],
-    ["himalayas_pages_per_query", "2", "Result pages per search (20 jobs per page)."],
+    ["himalayas_pages_per_query", "3", "Result pages per search (20 jobs per page)."],
     ["title_include_keywords",
      "executive assistant, administrative assistant, admin assistant, personal assistant, executive admin, "
      "assistant to the ceo, assistant to the founder, office administrator, administrative coordinator",
@@ -60,7 +60,9 @@ SETTINGS = [
     ["max_jobs_per_run", "15", "Cap on new postings sent to the LLM per run (protects free-tier limits)."],
     ["validation_model", "nvidia/nemotron-3-ultra-550b-a55b:free", "OpenRouter model used to check remote / English / relevance."],
     ["outreach_model", "nvidia/nemotron-3-ultra-550b-a55b:free", "OpenRouter model used to write the outreach message."],
-    ["fallback_model", "google/gemma-4-31b-it:free", "Used automatically if the main model is busy or down."],
+    ["fallback_model", "google/gemma-4-31b-it:free", "OpenRouter tries this model if the main model is busy or down."],
+    ["backup_model", "@cf/openai/gpt-oss-120b",
+     "Cloudflare Workers AI model used automatically if OpenRouter fails or hits its daily limit."],
     ["outreach_prompt", "v1_warm", "Which prompt from the Prompts tab writes the messages (Prompt Name)."],
     ["sender_name", "Benjamin Kariuki", "Signs the outreach message."],
     ["sender_company", "RAY", "Company named in the outreach message."],
@@ -146,8 +148,18 @@ def body_format_req(sheet_id, ncols, wrap="CLIP"):
 
 
 def ensure_headers(ws, headers):
-    current = ws.row_values(1)
-    if current != headers:
+    """Writes the header row. If a newer version added columns, inserts them in place so existing data shifts correctly."""
+    original = ws.row_values(1)
+    current = list(original)
+    if current and current != headers:
+        for idx, h in enumerate(headers):
+            if h not in current:
+                if idx < ws.col_count:
+                    ws.insert_cols([[]], col=idx + 1)
+                else:
+                    ws.add_cols(1)
+                current.insert(idx, h)
+    if original != headers:
         ws.update(range_name="A1", values=[headers])
 
 
@@ -208,10 +220,11 @@ def main():
                 "fields": "userEnteredFormat.wrapStrategy"}})
     # Leads
     req += header_req(leads.id, len(LEADS_HEADERS)) + body_format_req(leads.id, len(LEADS_HEADERS))
-    req += col_width_req(leads.id, [220, 200, 150, 140, 260, 420, 160, 90, 95, 95, 90, 120, 200])
-    for c in (1, 2, 3, 5, 6, 12):  # Title, Company, Location, Message, Languages, Notes wrap; URL + Description stay one line
+    req += col_width_req(leads.id, [220, 200, 150, 140, 260, 420, 160, 90, 95, 95, 90, 170, 120, 200])
+    for c in (1, 2, 3, 5, 6, 11, 13):  # Title, Company, Location, Message, Languages, AI Model, Notes wrap; URL + Description stay one line
         req.append({"repeatCell": {"range": {"sheetId": leads.id, "startRowIndex": 1, "startColumnIndex": c, "endColumnIndex": c + 1},
                     "cell": {"userEnteredFormat": {"wrapStrategy": "WRAP"}}, "fields": "userEnteredFormat.wrapStrategy"}})
+    req.append({"setDataValidation": {"range": {"sheetId": leads.id, "startRowIndex": 1}}})  # clear old dropdowns
     req.append({"setDataValidation": {
         "range": {"sheetId": leads.id, "startRowIndex": 1, "startColumnIndex": status_col, "endColumnIndex": status_col + 1},
         "rule": {"condition": {"type": "ONE_OF_LIST", "values": [{"userEnteredValue": s} for s in STATUSES]},
@@ -225,13 +238,13 @@ def main():
                                                          "startColumnIndex": 0, "endColumnIndex": len(LEADS_HEADERS)}}}})
     # Rejected
     req += header_req(rejected.id, len(REJECTED_HEADERS), (0.45, 0.2, 0.2)) + body_format_req(rejected.id, len(REJECTED_HEADERS))
-    req += col_width_req(rejected.id, [220, 200, 150, 140, 85, 85, 85, 85, 380, 90, 110])
+    req += col_width_req(rejected.id, [220, 200, 150, 140, 85, 85, 85, 85, 380, 90, 110, 200])
     req.append({"setBasicFilter": {"filter": {"range": {"sheetId": rejected.id, "startRowIndex": 0,
                                                          "startColumnIndex": 0, "endColumnIndex": len(REJECTED_HEADERS)}}}})
     # Settings / Prompts / Run Log
     req += header_req(settings.id, 3) + body_format_req(settings.id, 3, "WRAP") + col_width_req(settings.id, [210, 520, 420])
     req += header_req(prompts.id, 4) + body_format_req(prompts.id, 4, "WRAP") + col_width_req(prompts.id, [120, 100, 700, 280])
-    req += header_req(runlog.id, len(RUNLOG_HEADERS)) + col_width_req(runlog.id, [170] + [130] * 7)
+    req += header_req(runlog.id, len(RUNLOG_HEADERS)) + col_width_req(runlog.id, [150, 120] + [120] * 8)
 
     # Clear old conditional formats on Leads first so re-runs don't stack duplicates
     meta = sh.fetch_sheet_metadata({"fields": "sheets(properties.sheetId,conditionalFormats)"})

@@ -32,6 +32,7 @@ const config = {
   validationModel: s.validation_model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
   outreachModel: s.outreach_model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
   fallbackModel: s.fallback_model || '',
+  backupModel: s.backup_model || '@cf/openai/gpt-oss-120b',
   outreachPromptName,
   outreachPrompt: prompts[outreachPromptName],
   validationPrompt: prompts.validation,
