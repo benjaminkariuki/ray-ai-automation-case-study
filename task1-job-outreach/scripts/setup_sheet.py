@@ -1,12 +1,12 @@
 """
-One-time setup of the Google Sheet dashboard used by the n8n workflow.
+One-time setup of the Google Sheet dashboard used by the job_outreach pipeline.
 
 Creates (or repairs) these tabs: How to Use, Leads, Rejected, Settings, Prompts, Run Log.
 Safe to re-run: existing Leads/Rejected/Run Log rows are never touched; Settings and Prompts
 are only seeded when empty (use --reset-settings to overwrite them with the defaults).
 
 Usage:
-    pip install -r requirements.txt
+    pip install -r requirements.txt   (from the task1-job-outreach folder)
     python setup_sheet.py --sheet-id <SPREADSHEET_ID> --key <service-account.json> [--public] [--reset-settings]
 """
 import argparse

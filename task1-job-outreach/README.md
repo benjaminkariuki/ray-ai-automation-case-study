@@ -1,23 +1,24 @@
 # Task 1 – Executive Assistant Job Outreach Automation
 
-[![Task 1 health check](https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/health-check.yml/badge.svg)](https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/health-check.yml)
+[![Task 1 - EA Job Outreach](https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml/badge.svg)](https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml)
 
-An **n8n workflow** runs every day and does four things:
+A **Python pipeline, run every day by GitHub Actions**, does four things:
 
 1. Finds new Executive Assistant and Admin Assistant jobs on three job boards. LinkedIn is not used.
 2. Uses AI to check that each job is **remote, English-speaking and relevant**.
 3. Writes a **personalised outreach email** for every job that passes.
 4. Saves everything to a **Google Sheet that sales reps use as their dashboard**.
 
+It runs on GitHub's servers, so there's no server of our own to keep alive.
+
 | | |
 |---|---|
 | **Google Sheet (dashboard)** | https://docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI |
-| **n8n workflow export** | [workflow/job-outreach-workflow.json](workflow/job-outreach-workflow.json) |
-| **Sample output** | [sample-output/](sample-output/) (CSV for each tab, plus the full JSON of one run) |
+| **Run history (public logs)** | https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml |
+| **Source code** | [job_outreach/](job_outreach/) |
+| **Schedule** | [.github/workflows/job-outreach.yml](../.github/workflows/job-outreach.yml) |
+| **Sample output** | [sample-output/](sample-output/): a CSV of each Sheet tab, plus [latest/](sample-output/latest/), the newest run's JSON and CSV (updated automatically after every run) |
 | **Test report** | [docs/TEST_REPORT.md](docs/TEST_REPORT.md) |
-| **Daily health check** | [GitHub Actions](https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/health-check.yml) |
-
-![n8n workflow](docs/images/n8n-workflow.png)
 
 ---
 
@@ -28,16 +29,17 @@ An **n8n workflow** runs every day and does four things:
 | 1 | **Populated Sheet** | Open the Sheet → **Leads** tab. It has the 6 required columns in order, then extra tracking columns. |
 | 2 | **Validation works** | **Rejected** tab: each rejected job shows Yes/No for Remote, English, Relevant and Agency, plus the AI's reason. |
 | 3 | **Personalised messages** | Compare 2–3 messages in **Leads** with their **Job Posting URL**. Each one cites duties or details from that specific posting. |
-| 4 | **Interchangeable prompt** | **Prompts** tab: two outreach prompts, `v1_warm` and `v2_direct`. The **Prompt Used** column in Leads shows both were used, switched from the Settings tab with no workflow change. |
-| 5 | **Scheduling** | **Run Log** tab: one row per run, with a **Trigger** column (Schedule, Manual or Run-now link). The workflow runs daily at 06:00 UTC. |
-| 6 | **Run it yourself** | Open the **Run-now link** from the submission PDF. After about 3 minutes, a new row appears in **Run Log**, plus any new jobs in Leads or Rejected. |
-| 7 | **Automated check** | `python scripts/verify_sheet.py` checks the live Sheet against every requirement. It needs no login or packages; see the example below. The same check runs daily in GitHub Actions (see the badge above). |
+| 4 | **Interchangeable prompt** | **Prompts** tab: two outreach prompts, `v1_warm` and `v2_direct`. The **Prompt Used** column in Leads shows both were used, switched from the Settings tab with no code change. |
+| 5 | **Scheduling** | Open the **Run history** link above. There's a run every day at 06:00 UTC, and each run has a readable summary page and full console logs. The Sheet's **Run Log** tab records the same runs. |
+| 6 | **Console and sample output** | Open any run → *Run the pipeline* for the console output. [sample-output/latest/](sample-output/latest/) holds the newest run's JSON (every scraped posting and AI decision) and CSV. |
+| 7 | **Automated check** | `python scripts/verify_sheet.py` checks the live Sheet against every requirement. It needs no login or packages. It also runs automatically after every scheduled run. |
 
 ```text
 $ python scripts/verify_sheet.py
   [PASS] Required columns, in order: Job Posting URL, Job Title, Company Name, Location, Job Description, LLM-Generated Outreach Message
-  [PASS] No empty required fields / No duplicate jobs / Compliant non-LinkedIn sources: Himalayas, Jobicy
-  [PASS] Messages are unique / Messages reference the specific posting
+  [PASS] Leads present / No empty required fields / No duplicate jobs
+  [PASS] Compliant non-LinkedIn sources: Himalayas, Jobicy
+  [PASS] Messages are unique / Messages reference the specific posting: 34/34
   [PASS] Prompt is interchangeable (tracked per lead): prompts used: v1_warm, v2_direct
   [PASS] AI provider recorded per lead: providers: Cloudflare, OpenRouter
   [PASS] Every rejection failed a check / Automation ran in the last 30 hours / Latest run healthy
@@ -47,13 +49,14 @@ $ python scripts/verify_sheet.py
 ### Where each deliverable is
 | Deliverable (from the brief) | Location |
 |---|---|
-| Source code: **scrape** | The *Fetch Himalayas / RemoteOK / Jobicy* nodes, plus [02_normalize_filter.js](workflow/code/02_normalize_filter.js) |
-| Source code: **validate** | [validation_prompt.md](prompts/validation_prompt.md), [03_prepare_ai_check.js](workflow/code/03_prepare_ai_check.js) and [04_parse_ai_check.js](workflow/code/04_parse_ai_check.js) |
-| Source code: **LLM** | [outreach_v1_warm.md](prompts/outreach_v1_warm.md), [outreach_v2_direct.md](prompts/outreach_v2_direct.md) and [05_format_lead.js](workflow/code/05_format_lead.js). The AI calls are the *AI:* and *Backup AI:* nodes |
-| Source code: **Sheets** | The *Read …* and *Add to …* Google Sheets nodes, plus [setup_sheet.py](scripts/setup_sheet.py), which builds and formats the Sheet |
-| Full workflow | [job-outreach-workflow.json](workflow/job-outreach-workflow.json), generated by [build_workflow.py](scripts/build_workflow.py) from the files in `workflow/code/` |
-| Sample data output | [leads.csv](sample-output/leads.csv), [rejected.csv](sample-output/rejected.csv), [run-log.csv](sample-output/run-log.csv) and [job-run-sample.json](sample-output/job-run-sample.json) (every scraped posting and AI decision from one run) |
-| Scheduling setup | The n8n *Daily at 06:00 UTC* trigger (section 5) |
+| Source code: **scrape** | [sources.py](job_outreach/sources.py) (Himalayas, RemoteOK and Jobicy APIs) and [filters.py](job_outreach/filters.py) |
+| Source code: **validate** | [ai.py](job_outreach/ai.py) (`validate`, `parse_verdict`) and [validation_prompt.md](prompts/validation_prompt.md) |
+| Source code: **LLM** | [ai.py](job_outreach/ai.py) (OpenRouter with Cloudflare backup, `write_outreach`, `format_message`), [outreach_v1_warm.md](prompts/outreach_v1_warm.md) and [outreach_v2_direct.md](prompts/outreach_v2_direct.md) |
+| Source code: **Sheets** | [sheet.py](job_outreach/sheet.py) (reads settings, writes rows) and [setup_sheet.py](scripts/setup_sheet.py) (builds and formats the Sheet) |
+| Orchestration | [pipeline.py](job_outreach/pipeline.py) runs the whole flow; [`__main__.py`](job_outreach/__main__.py) is the command line |
+| Tests | [tests/](tests/) (offline unit tests run before every scheduled run) and [verify_sheet.py](scripts/verify_sheet.py) (live checks) |
+| Sample data output | [sample-output/](sample-output/), and the console logs of each [run](https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml) |
+| Scheduling setup | [job-outreach.yml](../.github/workflows/job-outreach.yml): GitHub Actions, daily at 06:00 UTC (section 5) |
 | README | This file |
 | Populated Google Sheet | The link at the top |
 
@@ -61,21 +64,25 @@ $ python scripts/verify_sheet.py
 
 ## 2. How it works
 
-| Step | What happens |
-|---|---|
-| **1. Trigger + settings** | Starts daily at 06:00 UTC, from the n8n **Execute** button, or from the **Run-now link**. Loads settings, prompts and already-processed URLs from the Google Sheet. |
-| **2. Fetch + filter** | Calls the public APIs of **Himalayas** (search), **RemoteOK** (assistant tag) and **Jobicy** (Admin & Support). Converts every job to one format: title, company, location, description, URL and date. Removes jobs with the wrong title keywords, excluded companies, postings older than 30 days, and duplicates. |
-| **3. AI check** | LLM call 1 returns strict JSON: `is_remote`, `is_english`, `is_relevant`, `is_agency`, `language_requirements` and a `reason`. A job is kept only if **all three** checks pass and it isn't a staffing or VA agency. |
-| **4. AI outreach** | LLM call 2 writes a short email based on that specific posting, using the prompt chosen in the Sheet. |
-| **5. Save + log** | Matches go to **Leads**. Rejections go to **Rejected** with the reason. **All done** waits for every write, then adds a **Run Log** row and saves the full run as JSON. |
+```
+GitHub Actions (daily 06:00 UTC, or "Run workflow")
+  └─ python -m job_outreach
+       1. Read Settings + Prompts + already-processed URLs from the Google Sheet
+       2. Fetch jobs: Himalayas (search) · RemoteOK (assistant tag) · Jobicy (Admin & Support)
+       3. Filter: title keywords, excluded companies, max age, duplicates  (no AI cost)
+       4. AI check per job → strict JSON: remote? English? relevant? agency? languages, reason
+       5. AI outreach email for each job that passes all three (and isn't an agency)
+       6. Write Leads + Rejected, then a Run Log row; save JSON/CSV of the run
+  └─ verify_sheet.py re-checks the live Sheet; the run's output is committed to sample-output/latest/
+```
 
 ### AI providers and how failover works
 ```
-OpenRouter (primary: Nemotron 3 Ultra, then Gemma 4 as its own fallback)
-   └─ fails or hits its daily limit ──► Cloudflare Workers AI (backup: gpt-oss-120b)
-                                          └─ also fails ──► job not saved; retried automatically next run
+OpenRouter (primary: Nemotron 3 Ultra → Gemma 4 as its own fallback)
+   └─ error, rate limit or unusable reply ──► Cloudflare Workers AI (backup: gpt-oss-120b)
+                                                └─ also fails ──► job not saved; retried automatically next run
 ```
-- Both providers are free tiers. OpenRouter allows about 50 requests a day; Cloudflare allows about 10,000 "neurons" a day, roughly 70 jobs.
+- Both providers are free tiers. OpenRouter allows about 50 requests a day; Cloudflare allows about 10,000 neurons a day, roughly 70 jobs.
 - Each lead and rejection records the **AI Model** that answered. The Run Log counts **Backup AI Used**.
 - An incomplete AI answer (missing fields or no reason) counts as an error, never a rejection, so a good job is never silently dropped.
 
@@ -83,8 +90,8 @@ OpenRouter (primary: Nemotron 3 Ultra, then Gemma 4 as its own fallback)
 - **No duplicates.** A job already in Leads or Rejected is never processed again, so the AI never gets paid to re-check it.
 - **Cost cap.** `max_jobs_per_run` limits how many jobs go to the AI in one run.
 - **Fault-tolerant sources.** If one job board fails, the others still run.
-- **Health monitoring.** A daily GitHub Actions check pings the server and re-verifies the Sheet. A failure turns the badge red and emails the repo owner.
-- **Self-recovery.** The server restarts n8n automatically after a reboot, and HTTPS certificates renew automatically.
+- **No server to maintain.** GitHub runs the job. Every run is tested first (offline unit tests) and checked afterwards (`verify_sheet.py`). If anything fails, the badge turns red and GitHub emails the repo owner.
+- **The schedule never goes idle.** Each run commits its output, which keeps the repo active, so GitHub doesn't pause the schedule.
 
 ---
 
@@ -104,13 +111,13 @@ OpenRouter (primary: Nemotron 3 Ultra, then Gemma 4 as its own fallback)
 | Prompts | The AI instructions, as plain text |
 | Run Log | One row per run: trigger, fetched, filtered, checked, added, rejected, errors and backup use |
 
-> Don't delete rows in Leads or Rejected; the automation uses them to avoid duplicates. Use **Not a Fit** instead. Deleting a row deliberately makes the job get re-checked.
+> Don't delete rows in Leads or Rejected; the automation uses them to avoid duplicates. Use **Not a Fit** instead. Deleting a row deliberately makes the job get re-checked on the next run.
 
 ![Leads tab](docs/images/sheet-leads.png)
 
 ---
 
-## 4. Changing filters and the AI prompt (no n8n needed)
+## 4. Changing filters and the AI prompt (no code needed)
 
 Everything you'd want to tune is in the Google Sheet. Changes apply on the **next run**.
 
@@ -141,45 +148,52 @@ Available placeholders: `{{job_title}}`, `{{company_name}}`, `{{location}}`, `{{
 ## 5. Install, run and schedule
 
 ### What you need
-- **n8n** version 2.x: n8n Cloud or self-hosted. Option B below sets up a ready-made server.
-- **Google Cloud service account** with the Sheets API and Drive API enabled.
+- **Python 3.10+**.
+- **Google Cloud service account** with the Sheets API and Drive API enabled, and its JSON key.
 - **OpenRouter API key** from https://openrouter.ai/settings/keys. A free account works.
 - **Cloudflare account ID and an API token** made from the *Workers AI* template at https://dash.cloudflare.com/profile/api-tokens. A free account works.
 
-### Option A: use an existing n8n
-1. **Create the Sheet.** Create a blank Google Sheet and share it as **Editor** with the service-account email. Then run:
-   ```bash
-   cd scripts && pip install -r requirements.txt
-   python setup_sheet.py --sheet-id <SHEET_ID> --key <service-account.json>
-   ```
-   This creates every tab, header, dropdown and default setting. It's safe to re-run, and it adds new columns to older Sheets automatically.
-2. **Import the workflow.** In n8n, go to **Workflows → Import from file** and choose `workflow/job-outreach-workflow.json`.
-3. **Add three credentials:**
-   - **Google Sheets:** Google API (Service Account) credential.
-   - **OpenRouter:** Header Auth, Name `Authorization`, Value `Bearer <OpenRouter key>`.
-   - **Cloudflare:** Header Auth, Name `Authorization`, Value `Bearer <Cloudflare token>`.
-
-   Select them in the Google Sheets nodes, the *AI:* nodes and the *Backup AI:* nodes respectively.
-4. **Fill in the Config node:** paste your **Sheet ID** and **Cloudflare account ID**.
-5. **Test.** Click **Execute workflow**, then check the Leads, Rejected and Run Log tabs.
-6. **Schedule it.** Click **Publish**. The workflow then runs daily at 06:00 UTC and the Run-now link becomes active.
-
-### Option B: deploy your own server (Azure)
-[deploy/deploy-azure.sh](deploy/deploy-azure.sh) creates an Ubuntu VM with Docker, n8n 2.47.2 and Caddy for automatic HTTPS. SSH access is limited to your IP address.
+### Setup (about 10 minutes)
 ```bash
-az login
-bash deploy/deploy-azure.sh my-n8n-name     # → https://my-n8n-name.southafricanorth.cloudapp.azure.com
+git clone https://github.com/benjaminkariuki/ray-ai-automation-case-study.git
+cd ray-ai-automation-case-study/task1-job-outreach
+pip install -r requirements.txt
+cp .env.example .env            # then fill in the 5 values (see the comments in the file)
 ```
-Open the URL, create the owner account, then follow option A from step 2. The 4 GB VM costs about $30 a month; n8n is unreliable on 1 GB.
+1. **Create the Sheet.** Create a blank Google Sheet and share it as **Editor** with the service-account email (`client_email` in the key file).
+2. **Build the tabs:**
+   ```bash
+   python scripts/setup_sheet.py --sheet-id <SHEET_ID> --key <service-account.json>
+   ```
+   This creates every tab, header, dropdown and default setting. It's safe to re-run.
+3. **Test it:**
+   ```bash
+   python -m pytest -q tests                 # offline unit tests
+   python -m job_outreach --dry-run          # full run, but nothing written to the Sheet
+   python -m job_outreach                    # real run
+   ```
+   Options: `--max-jobs N` overrides the per-run cap.
 
-### Day-to-day
+### Scheduling with GitHub Actions
+The schedule is in [.github/workflows/job-outreach.yml](../.github/workflows/job-outreach.yml).
+
+1. Push the repo to GitHub.
+2. Go to **Settings → Secrets and variables → Actions**.
+3. Add a **variable** `SHEET_ID`, and 4 **secrets**:
+   - `GOOGLE_SERVICE_ACCOUNT_JSON`: the key file's contents
+   - `OPENROUTER_API_KEY`
+   - `CLOUDFLARE_ACCOUNT_ID`
+   - `CLOUDFLARE_API_TOKEN`
+
+That's it. It runs daily at 06:00 UTC.
+
 | Task | How |
 |---|---|
-| Run now | **Execute workflow** in n8n, or open the Run-now link (`/webhook/<path>` from the *Run now (link)* node) |
-| Change the schedule | Open the **Daily at 06:00 UTC** node, change the hour or frequency (for example weekly), then **Publish** |
-| Pause | **Unpublish** |
-| History | The n8n **Executions** tab, the Sheet's **Run Log**, and JSON files in `/opt/n8n/files/` on the server |
-| Edit Code nodes | Edit `workflow/code/*.js`, then run `python scripts/build_workflow.py` to regenerate the workflow JSON |
+| Run now | **Actions → Task 1 - EA Job Outreach → Run workflow**. Optional inputs: max jobs, dry run |
+| Change the schedule | Edit `cron: "0 6 * * *"` in the workflow file, for example `"0 6 * * 1"` for weekly on Mondays |
+| Pause | **Actions → the workflow → ••• → Disable workflow** |
+| History | The **Actions** tab (logs and summary for each run), the Sheet's **Run Log**, and `sample-output/latest/` |
+| Other schedulers | Any machine can run it with cron (`0 6 * * * cd /path/task1-job-outreach && python -m job_outreach`) or Windows Task Scheduler |
 
 ---
 
@@ -191,31 +205,39 @@ Open the URL, create the owner account, then follow option A from step 2. The 4 
 | **LLM Errors** > 0 | Both AI providers failed, or a reply was incomplete | Nothing to do: those jobs retry next run. If it persists, change `backup_model` |
 | Checked by LLM = 0 | No *new* matching jobs (all already seen) | Normal on quiet days. Broaden `search_queries` or the keywords, or raise `himalayas_pages_per_query` |
 | Good job in **Rejected** | AI judged it non-remote, non-English or an agency | Read the Reason. Adjust the `validation` prompt or settings, then delete the row to have it re-checked |
-| *"outreach_prompt is … but no row with that Prompt Name exists"* | Typo in Settings | Use the exact Prompt Name from the Prompts tab |
-| Google Sheets *403/404* | Sheet not shared with the service account, or wrong ID in Config | Share as Editor and check the ID |
-| OpenRouter or Cloudflare *401* | Wrong or expired key | Update the credential (`Bearer …`) |
-| Health-check badge is red | Server down, or no run in 30 hours | Open the failed Action to see which check failed. Check the VM is running in the Azure portal and that the workflow is **Published** |
+| `outreach_prompt is "…" but the Prompts tab has no row with that name` | Typo in Settings | Use the exact Prompt Name from the Prompts tab |
+| `SHEET_ID is not set` or a credentials message | Missing `.env` value or GitHub secret | Fill in `.env` locally, or add the secret or variable in GitHub |
+| Google `PERMISSION_DENIED` / 404 | Sheet not shared with the service account, or wrong ID | Share as Editor and check the ID |
+| `Tab 'Leads' is missing columns` | Sheet created by an older version | Re-run `scripts/setup_sheet.py`, which adds the columns |
+| Badge is red / failure email | One of: tests, run or Sheet check failed | Open the failed run in **Actions**; the failing step and its log show why |
 
 ---
 
 ## 7. Design decisions
 - **Compliant sources.** Official public JSON APIs only: no HTML scraping and no LinkedIn. Each lead keeps the original URL and its source name, as the boards' terms ask.
-- **Cheap filter first, AI second.** Keyword rules remove about 75–85% of postings before any AI call, so the workflow fits inside free AI tiers.
+- **Cheap filter first, AI second.** Keyword rules remove about 75–85% of postings before any AI call, so the pipeline fits inside free AI tiers.
 - **Two independent AI providers.** OpenRouter is primary and Cloudflare is the backup. Each lead records which model wrote it.
 - **Agency detection.** Many remote EA postings come from VA and staffing agencies, which are competitors rather than leads. They're excluded by name and by the AI.
 - **No made-up claims.** Facts about the company come only from the posting, and facts about us only from `sender_offer`. Testing caught and removed invented language skills and tool expertise.
-- **Configuration in the Sheet.** Non-technical users can change search terms, filters, models and tone without opening n8n.
+- **Configuration in the Sheet.** Non-technical users can change search terms, filters, models and tone without touching code.
+- **Serverless.** Python on GitHub Actions means no server, no hosting bill and public run history. An earlier version ran on self-hosted n8n; it was replaced so nothing depends on a server staying up (see the test report).
 
 ## 8. Repository layout
 ```
 task1-job-outreach/
-├── workflow/job-outreach-workflow.json   # import this into n8n
-├── workflow/code/*.js                    # source of every Code node
-├── prompts/*.md                          # default prompts (copied into the Sheet)
-├── scripts/setup_sheet.py                # creates, formats and migrates the Google Sheet
-├── scripts/build_workflow.py             # builds the workflow JSON from source
-├── scripts/verify_sheet.py               # checks the live Sheet against the requirements
-├── deploy/                               # Azure VM + Docker + HTTPS setup
-├── sample-output/                        # leads.csv, rejected.csv, run-log.csv, job-run-sample.json
-└── docs/                                 # TEST_REPORT.md + screenshots
+├── job_outreach/          # the Python package
+│   ├── sources.py         #   scrape: Himalayas, RemoteOK, Jobicy APIs → one job format
+│   ├── filters.py         #   keyword / company / age / duplicate filter
+│   ├── ai.py              #   validate + outreach, OpenRouter → Cloudflare failover, parsing, formatting
+│   ├── sheet.py           #   Google Sheets read/write
+│   ├── pipeline.py        #   the end-to-end run, JSON/CSV output, GitHub run summary
+│   └── __main__.py        #   command line
+├── prompts/*.md           # default prompts (copied into the Sheet's Prompts tab)
+├── scripts/setup_sheet.py # creates, formats and migrates the Google Sheet
+├── scripts/verify_sheet.py# checks the live Sheet against the requirements (no login needed)
+├── tests/                 # offline unit tests (filtering, parsing, formatting, failover)
+├── sample-output/         # Sheet exports + latest/ (newest run, committed automatically)
+├── docs/                  # TEST_REPORT.md + screenshots
+├── requirements.txt
+└── .env.example
 ```
