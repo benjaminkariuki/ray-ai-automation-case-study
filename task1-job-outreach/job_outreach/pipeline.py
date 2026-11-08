@@ -19,6 +19,15 @@ def _yn(value):
 
 def run(sheet, *, trigger="Manual", dry_run=False, max_jobs=None, log=print):
     started = datetime.now(timezone.utc)
+    console = []  # everything printed is also saved as run-<time>.log (readable without a GitHub login)
+    _print = log
+
+    def log(line):  # noqa: F811 - wraps the caller's logger
+        stamped = f"{datetime.now(timezone.utc).strftime('%H:%M:%S')}  {line}"
+        console.append(stamped)
+        _print(stamped)
+
+    log(f"Run started ({trigger}{', dry run' if dry_run else ''}) at {started.strftime('%Y-%m-%d %H:%M')} UTC")
     config = sheet.load_config()
     if max_jobs is not None:
         config["max_jobs_per_run"] = max_jobs
@@ -91,20 +100,22 @@ def run(sheet, *, trigger="Manual", dry_run=False, max_jobs=None, log=print):
               "stats": stats, "source_errors": source_errors, "errors": errors, "decisions": decisions,
               "scraped": [{**{k: v for k, v in j.items() if k != "posted"},
                            "posted": j["posted"].strftime("%Y-%m-%d") if j.get("posted") else ""} for j in jobs]}
-    paths = write_outputs(report, leads, rejected)
-    write_github_summary(summary, leads, rejected, errors, sheet.sheet_id)
+    stamp = started.strftime("%Y-%m-%d_%H%M")
     log("Run summary: " + json.dumps(summary))
-    log("Files: " + ", ".join(str(p) for p in paths))
+    log(f"Output: output/run-{stamp}.json (+ .log and CSV files)")
+    paths = write_outputs(report, leads, rejected, stamp, console)
+    write_github_summary(summary, leads, rejected, errors, sheet.sheet_id)
     return summary
 
 
-def write_outputs(report, leads, rejected):
-    """Structured output of every run: full JSON + CSV of this run's leads and rejections."""
+def write_outputs(report, leads, rejected, stamp, console):
+    """Structured output of every run: full JSON, console log, and CSV of this run's leads and rejections."""
     OUTPUT_DIR.mkdir(exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M")
     json_path = OUTPUT_DIR / f"run-{stamp}.json"
     json_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
-    paths = [json_path]
+    log_path = OUTPUT_DIR / f"run-{stamp}.log"
+    log_path.write_text("\n".join(console) + "\n", encoding="utf-8")
+    paths = [json_path, log_path]
     for name, rows in (("leads", leads), ("rejected", rejected)):
         if rows:
             p = OUTPUT_DIR / f"run-{stamp}-{name}.csv"

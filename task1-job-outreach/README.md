@@ -14,10 +14,10 @@ It runs on GitHub's servers, so there's no server of our own to keep alive.
 | | |
 |---|---|
 | **Google Sheet (dashboard)** | https://docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI |
-| **Run history (public logs)** | https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml |
+| **Run history** | https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml |
 | **Source code** | [job_outreach/](job_outreach/) |
 | **Schedule** | [.github/workflows/job-outreach.yml](../.github/workflows/job-outreach.yml) |
-| **Sample output** | [sample-output/](sample-output/): a CSV of each Sheet tab, plus [latest/](sample-output/latest/), the newest run's JSON and CSV (updated automatically after every run) |
+| **Sample output** | [sample-output/](sample-output/): a CSV of each Sheet tab, plus [latest/](sample-output/latest/), the newest run's console log, JSON and CSV (updated automatically after every run) |
 | **Test report** | [docs/TEST_REPORT.md](docs/TEST_REPORT.md) |
 
 ---
@@ -30,8 +30,8 @@ It runs on GitHub's servers, so there's no server of our own to keep alive.
 | 2 | **Validation works** | **Rejected** tab: each rejected job shows Yes/No for Remote, English, Relevant and Agency, plus the AI's reason. |
 | 3 | **Personalised messages** | Compare 2–3 messages in **Leads** with their **Job Posting URL**. Each one cites duties or details from that specific posting. |
 | 4 | **Interchangeable prompt** | **Prompts** tab: two outreach prompts, `v1_warm` and `v2_direct`. The **Prompt Used** column in Leads shows both were used, switched from the Settings tab with no code change. |
-| 5 | **Scheduling** | Open the **Run history** link above. There's a run every day at 06:00 UTC, and each run has a readable summary page and full console logs. The Sheet's **Run Log** tab records the same runs. |
-| 6 | **Console and sample output** | Open any run → *Run the pipeline* for the console output. [sample-output/latest/](sample-output/latest/) holds the newest run's JSON (every scraped posting and AI decision) and CSV. |
+| 5 | **Scheduling** | Open the **Run history** link above. There's a green run every day at 06:00 UTC; the full logs need a free GitHub sign-in. The Sheet's **Run Log** tab records the same runs. |
+| 6 | **Console and sample output** | [sample-output/latest/](sample-output/latest/) holds the newest run's console output (`.log`), its JSON (every scraped posting and AI decision) and CSV. No sign-in needed. |
 | 7 | **Automated check** | `python scripts/verify_sheet.py` checks the live Sheet against every requirement. It needs no login or packages. It also runs automatically after every scheduled run. |
 
 ```text
@@ -55,7 +55,7 @@ $ python scripts/verify_sheet.py
 | Source code: **Sheets** | [sheet.py](job_outreach/sheet.py) (reads settings, writes rows) and [setup_sheet.py](scripts/setup_sheet.py) (builds and formats the Sheet) |
 | Orchestration | [pipeline.py](job_outreach/pipeline.py) runs the whole flow; [`__main__.py`](job_outreach/__main__.py) is the command line |
 | Tests | [tests/](tests/) (offline unit tests run before every scheduled run) and [verify_sheet.py](scripts/verify_sheet.py) (live checks) |
-| Sample data output | [sample-output/](sample-output/), and the console logs of each [run](https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml) |
+| Sample data output | [sample-output/](sample-output/): Sheet exports, plus the newest run's console `.log`, `.json` and `.csv` in `latest/` |
 | Scheduling setup | [job-outreach.yml](../.github/workflows/job-outreach.yml): GitHub Actions, daily at 06:00 UTC (section 5) |
 | README | This file |
 | Populated Google Sheet | The link at the top |
@@ -192,7 +192,7 @@ That's it. It runs daily at 06:00 UTC.
 | Run now | **Actions → Task 1 - EA Job Outreach → Run workflow**. Optional inputs: max jobs, dry run |
 | Change the schedule | Edit `cron: "0 6 * * *"` in the workflow file, for example `"0 6 * * 1"` for weekly on Mondays |
 | Pause | **Actions → the workflow → ••• → Disable workflow** |
-| History | The **Actions** tab (logs and summary for each run), the Sheet's **Run Log**, and `sample-output/latest/` |
+| History | The **Actions** tab (logs and summary for each run, signed in), the Sheet's **Run Log**, and `sample-output/latest/` |
 | Other schedulers | Any machine can run it with cron (`0 6 * * * cd /path/task1-job-outreach && python -m job_outreach`) or Windows Task Scheduler |
 
 ---

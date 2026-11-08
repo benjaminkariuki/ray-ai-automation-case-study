@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   run:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults:
       run:
@@ -42,9 +42,9 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       RUN_TRIGGER: ${{ github.event_name == 'schedule' && 'Schedule (GitHub Actions)' || 'Manual (GitHub Actions)' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -80,7 +80,7 @@ jobs:
 
       - name: Upload output as an artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: run-output
           path: task1-job-outreach/output/
