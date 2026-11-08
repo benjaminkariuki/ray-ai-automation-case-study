@@ -1,0 +1,87 @@
+# Task 1 - EA Job Outreach: runs the Python pipeline on GitHub's servers (no server of our own).
+#   - every day at 06:00 UTC, and on demand via "Run workflow" (Actions tab)
+#   - unit tests first, then the live run, then a check of the live Google Sheet against the requirements
+#   - the run's JSON/CSV output is committed to task1-job-outreach/sample-output/latest/ (fresh sample data,
+#     and the commit keeps the repository active so GitHub never pauses the schedule)
+# A failed run turns the badge red and GitHub emails the repository owner.
+name: Task 1 - EA Job Outreach
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      max_jobs:
+        description: "Max new jobs to send to the AI (blank = value in the Sheet's Settings tab)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Dry run (do not write to the Google Sheet)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: job-outreach
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: task1-job-outreach
+    env:
+      SHEET_ID: ${{ secrets.SHEET_ID }}
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      RUN_TRIGGER: ${{ github.event_name == 'schedule' && 'Schedule (GitHub Actions)' || 'Manual (GitHub Actions)' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: task1-job-outreach/requirements.txt
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Unit tests (offline)
+        run: python -m pytest -q tests
+
+      - name: Run the pipeline
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.max_jobs }}" ]; then ARGS="$ARGS --max-jobs ${{ inputs.max_jobs }}"; fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          python -m job_outreach $ARGS
+
+      - name: Check the live Google Sheet meets every requirement
+        run: python scripts/verify_sheet.py
+
+      - name: Save this run's output to the repository
+        if: ${{ always() && inputs.dry_run != true }}
+        run: |
+          mkdir -p sample-output/latest
+          rm -f sample-output/latest/*
+          cp output/* sample-output/latest/ 2>/dev/null || exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sample-output/latest
+          git commit -m "Task 1 run output $(date -u +'%Y-%m-%d %H:%M') UTC [skip ci]" || exit 0
+          git pull --rebase --quiet && git push --quiet
+
+      - name: Upload output as an artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-output
+          path: task1-job-outreach/output/
+          if-no-files-found: ignore
