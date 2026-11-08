@@ -71,3 +71,11 @@ def test_fill_and_provider():
     assert fill("Hi {{ company_name }} - {{unknown}}", {"company_name": "Acme"}) == "Hi Acme - {{unknown}}"
     assert provider_of("@cf/openai/gpt-oss-120b") == "Cloudflare"
     assert provider_of("nvidia/nemotron-3-ultra-550b-a55b:free") == "OpenRouter"
+
+
+def test_language_requirements_detected_for_every_posting():
+    from job_outreach.languages import detect_languages
+    assert detect_languages("Must be bilingual in Spanish and English (C1).") == "English, Spanish"
+    assert detect_languages("Fluent German is a must; French is a plus.") == "German, French"
+    assert detect_languages("Our office is in Germany. We love Python.") == ""
+    assert detect_languages("Excellent written and verbal English communication skills") == "English"

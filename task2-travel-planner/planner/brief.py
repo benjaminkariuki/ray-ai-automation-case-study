@@ -43,7 +43,7 @@ def prop(page, name):
 
 
 def parse_itinerary(raw):
-    """'2026-11-09 08:15 | Flight | KQ100 NBO → LHR | Conf ABC123' per line -> sorted events.
+    """'2026-11-20 21:30 | Flight | BA178 JFK → LHR | PNR ABC123' per line -> sorted events.
     Lines that don't match the format are returned separately so nothing is silently lost."""
     events, unparsed = [], []
     for line in str(raw or "").splitlines():
@@ -129,7 +129,7 @@ def build_brief(page, now=None):
     blocks.append(heading(2, "📅 Timeline"))
     if not events:
         blocks.append(para(text("No itinerary yet — add lines to the Itinerary property, e.g. "
-                                "2026-11-20 08:15 | Flight | KQ100 Nairobi → London | Conf ABC123", color="gray")))
+                                "2026-11-20 21:30 | Flight | BA178 New York (JFK) → London (LHR) | PNR ABC123", color="gray")))
     current_day = None
     for ev in events:
         if ev["when"].date() != current_day:

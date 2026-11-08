@@ -2,6 +2,7 @@
 
 Every fetcher returns a list of jobs in one common shape:
     {source, url, title, company, location, description, posted (datetime, UTC)}
+fetch_all() adds language_requirements (rule-based) to every job.
 """
 import html
 import json
@@ -10,6 +11,8 @@ import time
 from datetime import datetime, timezone
 
 import requests
+
+from .languages import detect_languages
 
 USER_AGENT = "RAY-Job-Outreach/2.0 (+https://github.com/benjaminkariuki/ray-ai-automation-case-study)"
 
@@ -126,4 +129,6 @@ def fetch_all(config):
             jobs.extend(fetch())
         except Exception as exc:  # noqa: BLE001 - one bad source must not stop the run
             errors.append(f"{name}: {exc}")
+    for job in jobs:  # collected for every posting, as the brief asks (AI refines it for validated jobs)
+        job["language_requirements"] = detect_languages(job["title"] + ". " + job["description"]) or "Not stated"
     return jobs, errors

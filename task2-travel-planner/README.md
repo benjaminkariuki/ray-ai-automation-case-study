@@ -75,7 +75,7 @@ Why generate it rather than use a Notion template? A Notion page can't display i
 1. In **Trips**, click **New** and fill in the fields. Attach tickets and visas in **Documents**.
 2. Write the itinerary one line per event:
    ```
-   2026-11-20 08:15 | Flight | KQ100 Nairobi → London | PNR ABC123
+   2026-11-20 21:30 | Flight | BA178 New York (JFK) → London (LHR) | PNR ABC123
    2026-11-20 16:00 | Meeting | Investor meeting, 20 Air St | Contact: Priya
    2026-11-21 | Free | Rest day
    ```

@@ -57,8 +57,8 @@ def guide_blocks():
         {"type": "heading_3", "heading_3": {"rich_text": text("For the Executive Assistant")}},
         b(text("Add a trip: ", bold=True), text("click New in the trips table, fill in the fields "
           "(dates, traveler, flights, hotel, contacts) and attach tickets/visas in Documents.")),
-        b(text("Itinerary: ", bold=True), text(ITINERARY_HELP + "  — e.g. 2026-11-20 08:15 | Flight | "
-          "KQ100 Nairobi → London | Conf ABC123")),
+        b(text("Itinerary: ", bold=True), text(ITINERARY_HELP + "  — e.g. 2026-11-20 21:30 | Flight | "
+          "BA178 New York (JFK) → London (LHR) | PNR ABC123")),
         b(text("Trip Brief: ", bold=True), text("built automatically inside the trip page within ~15 minutes of any "
           "change. Tick “Rebuild Brief” to force a refresh. Notes below “📂 Extra files & notes” are never overwritten.")),
         b(text("Status: ", bold=True), text("Planned → In-Progress → Done (drag cards on the Board view).")),

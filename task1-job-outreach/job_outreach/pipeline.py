@@ -78,7 +78,8 @@ def run(sheet, *, trigger="Manual", dry_run=False, max_jobs=None, log=print):
             "Job Posting URL": job["url"], "Job Title": job["title"], "Company Name": job["company"],
             "Location": job["location"],
             "Job Description": re.sub(r"\s*\n+\s*", " | ", job["description"]).removeprefix("- ")[:45000],
-            "LLM-Generated Outreach Message": message, "Language Requirements": verdict["languages"],
+            "LLM-Generated Outreach Message": message,
+            "Language Requirements": verdict["languages"] or job.get("language_requirements", ""),
             "Source": job["source"], "Date Posted": posted, "Date Found": today,
             "Prompt Used": config["outreach_prompt_name"], "AI Model": model, "Status": "New", "Notes": ""})
         log(f"{label} -> LEAD ({model})")
@@ -109,14 +110,18 @@ def run(sheet, *, trigger="Manual", dry_run=False, max_jobs=None, log=print):
 
 
 def write_outputs(report, leads, rejected, stamp, console):
-    """Structured output of every run: full JSON, console log, and CSV of this run's leads and rejections."""
+    """Structured output of every run: full JSON, console log, CSV of every scraped posting, leads and rejections."""
     OUTPUT_DIR.mkdir(exist_ok=True)
     json_path = OUTPUT_DIR / f"run-{stamp}.json"
     json_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     log_path = OUTPUT_DIR / f"run-{stamp}.log"
     log_path.write_text("\n".join(console) + "\n", encoding="utf-8")
     paths = [json_path, log_path]
-    for name, rows in (("leads", leads), ("rejected", rejected)):
+    postings = [{"Job Title": j["title"], "Company Name": j["company"], "Location": j["location"],
+                 "Job Description": j["description"], "Job Posting URL": j["url"],
+                 "Language Requirements": j.get("language_requirements", ""), "Source": j["source"],
+                 "Date Posted": j.get("posted", "")} for j in report["scraped"]]
+    for name, rows in (("all-postings", postings), ("leads", leads), ("rejected", rejected)):
         if rows:
             p = OUTPUT_DIR / f"run-{stamp}-{name}.csv"
             with p.open("w", newline="", encoding="utf-8") as f:

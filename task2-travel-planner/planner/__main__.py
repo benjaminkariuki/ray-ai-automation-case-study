@@ -1,6 +1,6 @@
 """Command line.
 
-  python -m planner build --page <PAGE_URL_OR_ID> [--with-samples]   one-time: create the workspace in Notion
+  python -m planner build --page <PAGE_URL_OR_ID> [--with-samples] [--reset]   create the workspace in Notion
   python -m planner briefs [--all]                                  refresh Trip Briefs that changed (or all)
 
 Settings come from environment variables or a .env file: NOTION_TOKEN, NOTION_DATA_SOURCE_ID (see .env.example).
@@ -13,7 +13,7 @@ from pathlib import Path
 
 from .brief import needs_refresh, prop, write_brief
 from .notion import Notion
-from .sample_data import TRIPS, page_properties
+from .sample_data import all_trips, page_properties
 from .workspace import create_workspace
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -53,7 +53,8 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     b = sub.add_parser("build", help="Create the workspace under an existing (connected) Notion page")
     b.add_argument("--page", default=os.environ.get("NOTION_PAGE_URL"), help="Page URL or id")
-    b.add_argument("--with-samples", action="store_true", help="Add 5 sample trips")
+    b.add_argument("--with-samples", action="store_true", help="Add the 23 sample trips (Europe + USA)")
+    b.add_argument("--reset", action="store_true", help="First delete everything on the page (rebuild from scratch)")
     r = sub.add_parser("briefs", help="Refresh Trip Briefs")
     r.add_argument("--all", action="store_true", help="Rebuild every brief, not only changed trips")
     args = ap.parse_args()
@@ -62,10 +63,15 @@ def main():
     if args.cmd == "build":
         if not args.page:
             raise SystemExit("Pass --page <Notion page URL> (or set NOTION_PAGE_URL).")
-        ids = create_workspace(notion, page_id_from(args.page))
+        page_id = page_id_from(args.page)
+        if args.reset:
+            for block in notion.children(page_id):
+                notion.call("DELETE", f"/blocks/{block['id']}")
+            print("Page cleared.")
+        ids = create_workspace(notion, page_id)
         print(json.dumps(ids, indent=2))
         if args.with_samples:
-            for trip in TRIPS:
+            for trip in all_trips():
                 notion.call("POST", "/pages", {"parent": {"type": "data_source_id",
                                                           "data_source_id": ids["data_source_id"]},
                                                "icon": {"type": "emoji", "emoji": "🧳"},
