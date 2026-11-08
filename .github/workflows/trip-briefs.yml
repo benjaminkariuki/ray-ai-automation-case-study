@@ -1,0 +1,40 @@
+# Task 2 - keeps every Notion Trip Brief up to date.
+# Every 15 minutes: rebuilds the brief of any trip that is new, was edited, or has "Rebuild Brief" ticked.
+name: Task 2 - Trip Briefs
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      rebuild_all:
+        description: "Rebuild every brief (not only changed trips)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: trip-briefs
+  cancel-in-progress: false
+
+jobs:
+  briefs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: task2-travel-planner
+    env:
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+      NOTION_DATA_SOURCE_ID: ${{ vars.NOTION_DATA_SOURCE_ID }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: task2-travel-planner/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Unit tests (offline)
+        run: python -m pytest -q tests
+      - name: Refresh changed Trip Briefs
+        run: python -m planner briefs ${{ inputs.rebuild_all && '--all' || '' }}
