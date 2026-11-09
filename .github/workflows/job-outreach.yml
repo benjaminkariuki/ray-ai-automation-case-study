@@ -1,5 +1,7 @@
 # Task 1 - EA Job Outreach: runs the Python pipeline on GitHub's servers (no server of our own).
-#   - every day at 06:00 UTC, and on demand via "Run workflow" (Actions tab)
+#   - every day at about 06:00 UTC, and on demand via "Run workflow" (Actions tab)
+#   - GitHub's free scheduler sometimes skips cron runs when it is busy, so a backup slot at about 12:00 UTC
+#     runs only if no scheduled run has succeeded yet that day (the "gate" job checks this)
 #   - unit tests first, then the live run, then a check of the live Google Sheet against the requirements
 #   - the run's JSON/CSV output is committed to task1-job-outreach/sample-output/latest/ (fresh sample data,
 #     and the commit keeps the repository active so GitHub never pauses the schedule)
@@ -8,7 +10,8 @@ name: Task 1 - EA Job Outreach
 
 on:
   schedule:
-    - cron: "0 6 * * *"
+    - cron: "7 6 * * *"    # main daily run (7 minutes past the hour: the top of the hour is GitHub's busiest time)
+    - cron: "7 12 * * *"   # backup: runs only if the 06:07 run was skipped
   workflow_dispatch:
     inputs:
       max_jobs:
@@ -28,7 +31,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event.schedule }}" != "7 12 * * *" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          done_today=$(gh run list -R "${{ github.repository }}" -w job-outreach.yml -e schedule -s success --created ">=$(date -u +%F)" --json databaseId --jq length)
+          if [ "$done_today" -gt 0 ]; then
+            echo "Today's scheduled run already succeeded - backup slot not needed." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "The 06:07 scheduled run was skipped by GitHub - running now as the backup." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
   run:
+    needs: gate
+    if: needs.gate.outputs.go == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults:

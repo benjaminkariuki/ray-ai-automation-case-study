@@ -30,7 +30,7 @@ It runs on GitHub's servers, so there's no server of our own to keep alive.
 | 2 | **Validation works** | **Rejected** tab: each rejected job shows Yes/No for Remote, English, Relevant and Agency, plus the AI's reason. |
 | 3 | **Personalised messages** | Compare 2–3 messages in **Leads** with their **Job Posting URL**. Each one cites duties or details from that specific posting. |
 | 4 | **Interchangeable prompt** | **Prompts** tab: two outreach prompts, `v1_warm` and `v2_direct`. The **Prompt Used** column in Leads shows both were used, switched from the Settings tab with no code change. |
-| 5 | **Scheduling** | Open the **Run history** link above. There's a green run every day at 06:00 UTC; the full logs need a free GitHub sign-in. The Sheet's **Run Log** tab records the same runs. |
+| 5 | **Scheduling** | Open the **Run history** link above. Scheduled runs appear daily at about 06:00 UTC. GitHub's free scheduler occasionally skips a slot, so a backup run at about 12:00 UTC fills in on those days. The full logs need a free GitHub sign-in. The Sheet's **Run Log** tab records the same runs. |
 | 6 | **Console and sample output** | [sample-output/latest/](sample-output/latest/) holds the newest run's console output (`.log`), its JSON (every scraped posting and AI decision) and CSV. No sign-in needed. |
 | 7 | **Automated check** | `python scripts/verify_sheet.py` checks the live Sheet against every requirement. It needs no login or packages. It also runs automatically after every scheduled run. |
 
@@ -185,7 +185,7 @@ The schedule is in [.github/workflows/job-outreach.yml](../.github/workflows/job
    - `CLOUDFLARE_ACCOUNT_ID`
    - `CLOUDFLARE_API_TOKEN`
 
-That's it. It runs daily at 06:00 UTC.
+That's it. It runs daily at about 06:00 UTC, with a 12:00 UTC backup if GitHub skips the morning slot.
 
 | Task | How |
 |---|---|
