@@ -38,9 +38,9 @@
   h2, h3 { break-after: avoid; }
   tr, .shot, .stats, .flow, .box, li, .two { break-inside: avoid; }
   .muted { color: var(--muted); }
-  .crop-ov { height: 430px; object-fit: cover; object-position: top center; }
-  .crop-board { height: 300px; object-fit: cover; object-position: center bottom; }
-  .crop-brief { height: 520px; object-fit: cover; object-position: center 70%; }
+  .crop-ov { height: 360px; object-fit: cover; object-position: top center; }
+  .crop-board { height: 250px; object-fit: cover; object-position: center bottom; }
+  .crop-brief { height: 430px; object-fit: cover; object-position: center 22%; }
   .crop { height: 205px; object-fit: cover; object-position: top left; }
   .note { border-left: 4px solid var(--accent); background: var(--soft); padding: 9px 14px; margin: 8px 0 12px; border-radius: 0 8px 8px 0; }
   .note ol { margin: 4px 0 2px 20px; padding: 0; } .note li { margin-bottom: 5px; }
@@ -175,6 +175,17 @@
   <li><b>Made for a phone, easy on the eyes.</b> Briefs use only headings, bullets and coloured boxes, with thin grey lines between sections and between days, so the eye can jump straight to the part it needs. There are no wide tables, so nothing needs sideways scrolling.</li>
 </ol>
 </div>
+
+<h3>The five tabs, and why each one exists</h3>
+<p>Each tab answers one question, for one person, and shows only the few fields that question needs. They are ordered by how often they are used, so the tab that opens by default is the one the founder needs most.</p>
+<table class="grid">
+  <tr><th style="width:17%">Tab</th><th style="width:30%">The question it answers</th><th>Design and inspiration</th></tr>
+  <tr><td><b>Upcoming trips</b> (opens first)</td><td>Founder: "Where am I going next, and when?"</td><td>A plain list, soonest first, with a countdown and an <i>Open the Trip Brief</i> link. Finished trips are hidden. Inspired by the "upcoming trips" screen of travel and airline apps, where the next journey is always at the top.</td></tr>
+  <tr><td><b>Calendar</b></td><td>Founder and EA: "What does my month look like?"</td><td>A month calendar with each trip spanning its dates. Inspired by the calendar most executives already live in, so nothing new has to be learned and clashes with other plans are easy to see.</td></tr>
+  <tr><td><b>Timeline</b></td><td>EA: "Are trips back to back or overlapping?"</td><td>Upcoming trips as bars on a time axis, like a project-planning (Gantt) chart, so tight turnarounds and gaps for rest stand out at a glance.</td></tr>
+  <tr><td><b>By status</b></td><td>EA: "What still needs planning?"</td><td>A board with Planned / In-Progress / Done columns, the familiar task-board (Kanban) pattern. Dragging a card changes the trip's status, which also moves it in the other tabs.</td></tr>
+  <tr><td><b>All trips</b></td><td>EA: "Everything, past and future"</td><td>The full record in one table, newest first, with status, dates, destination, traveler, purpose and visa status: the assistant's working list and the archive.</td></tr>
+</table>
 
 <h3>Requirements, as written in the brief</h3>
 <table class="grid">

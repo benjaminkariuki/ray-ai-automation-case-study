@@ -74,16 +74,16 @@ Only the brief section is rewritten. Anything below **📂 Extra files & notes**
 
 Why generate it rather than use a Notion template? A Notion page can't display its own properties as a formatted, sorted timeline, and templates are only filled once, when the page is created. Generating the brief keeps it **always in sync** with the trip's fields. The EA only maintains the fields.
 
-### Views
-Each view shows only the fields needed to pick a trip; everything else is in the brief.
+### Views (the five tabs)
+Each tab answers one question for one person and shows only the fields that question needs; everything else is in the brief. They are ordered by how often they're used, so the default tab is the founder's.
 
-| View | Type | Shows |
+| Tab | Question it answers | Design and inspiration |
 |---|---|---|
-| Upcoming trips (default) | Table | Planned and In-Progress trips, soonest first: trip, *Open the Trip Brief* link, dates, countdown |
-| Calendar | Calendar (month) | Trips across their date range |
-| Timeline | Timeline | Planned and In-Progress trips on a timeline |
-| By status | Board | Columns for Planned / In-Progress / Done; drag cards to change status |
-| All trips | Table | Every trip with status, dates, countdown, city, traveler, purpose and visa status |
+| **Upcoming trips** (default) | Founder: "Where am I going next, and when?" | Plain list, soonest first: trip, *Open the Trip Brief* link, dates, countdown; Done trips hidden. Like the "upcoming trips" screen of travel and airline apps |
+| **Calendar** | Founder and EA: "What does my month look like?" | Month calendar, each trip spanning its dates. Like the calendar executives already use, so clashes are easy to see |
+| **Timeline** | EA: "Are trips back to back or overlapping?" | Upcoming trips as bars on a time axis, like a Gantt chart, so tight turnarounds and rest gaps stand out |
+| **By status** | EA: "What still needs planning?" | Planned / In-Progress / Done columns, the Kanban pattern; dragging a card changes the status everywhere |
+| **All trips** | EA: "Everything, past and future" | Full table, newest first, with status, dates, destination, traveler, purpose and visa status: the working list and the archive |
 
 ---
 
