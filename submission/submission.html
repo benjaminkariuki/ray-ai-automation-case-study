@@ -49,37 +49,51 @@
 
 <div class="box links">
   <table>
-    <tr><td>Code repository</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study">github.com/benjaminkariuki/ray-ai-automation-case-study</a></td></tr>
-    <tr><td>Task 1 – Google Sheet</td><td><a href="https://docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI">docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI</a></td></tr>
-    <tr><td>Task 1 – Run history</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml">GitHub Actions: daily runs at 06:00 UTC</a></td></tr>
-    <tr><td>Task 1 – README</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study/tree/main/task1-job-outreach">task1-job-outreach/README.md</a></td></tr>
-    <tr><td>Task 1 – Sample output</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study/tree/main/task1-job-outreach/sample-output/latest">sample-output/latest</a> (console log, JSON, CSV of the newest run)</td></tr>
-    <tr><td>Task 2 – Notion (public)</td><td><a href="NOTION_PUBLIC_URL">NOTION_PUBLIC_URL_TEXT</a></td></tr>
-    <tr><td>Task 2 – README</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study/tree/main/task2-travel-planner">task2-travel-planner/README.md</a></td></tr>
+    <tr><td>Code repository</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study">github.com/benjaminkariuki/ray-ai-automation-case-study</a> (both tasks)</td></tr>
     <tr><td>Requirement checklist</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study/blob/main/REQUIREMENTS_CHECK.md">REQUIREMENTS_CHECK.md</a>: every line of the brief, how it's met, where to verify it</td></tr>
   </table>
 </div>
+<p class="muted">Each task starts with its own links, then what was built, how every requirement is met, and how to verify it.</p>
 
 <h2>Task 1 – Executive Assistant Job Outreach Automation</h2>
 
+<div class="box links">
+  <table>
+    <tr><td>Google Sheet (dashboard)</td><td><a href="https://docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI">docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI</a><br><span class="muted">Anyone with the link can view and edit</span></td></tr>
+    <tr><td>Run it now</td><td><a href="RUN_NOW_URL">RUN_NOW_URL_TEXT</a><br><span class="muted">Public page: start a run yourself, no GitHub account needed</span></td></tr>
+    <tr><td>Run history</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml">GitHub Actions: every run, daily and on demand</a></td></tr>
+    <tr><td>README</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study/tree/main/task1-job-outreach">task1-job-outreach/README.md</a></td></tr>
+    <tr><td>Sample output</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study/tree/main/task1-job-outreach/sample-output">sample-output/</a>: CSV of each Sheet tab, plus <code>latest/</code> (console log, JSON, CSV of the newest run)</td></tr>
+  </table>
+</div>
+
 <h3>What I built</h3>
-<p>A <b>Python pipeline</b>, run <b>every day at 06:00 UTC by GitHub Actions</b>, so no server of our own is needed. Each run:</p>
+<p>A <b>Python pipeline</b>, run <b>every day by GitHub Actions</b>, so no server of our own is needed. Each run:</p>
 <ul>
   <li><b>Searches three job boards</b> (Himalayas, RemoteOK and Jobicy) through their official public APIs. LinkedIn is not used.</li>
   <li><b>Checks each new posting with an LLM</b>: is it remote, English-speaking and relevant to an Executive or Admin Assistant? A job must pass all three to be kept.</li>
   <li><b>Writes a personalised outreach email</b> for each match.</li>
-  <li><b>Fills a Google Sheet</b> that sales reps use as their dashboard.</li>
+  <li><b>Fills a colour-coded Google Sheet</b> that sales reps use as their dashboard.</li>
 </ul>
 <p>Search terms, filters, AI models and prompts are all edited <b>in the Sheet</b>, so tone can be tested without touching code.</p>
 
-<div class="flow">GitHub Actions (daily 06:00 UTC, or "Run workflow")  →  python -m job_outreach
-  1  Read Settings + Prompts + already-processed URLs from the Google Sheet
+<div class="flow">Daily ~06:07 UTC (+ backups) · "Run now" page · "Run workflow"  →  GitHub Actions  →  python -m job_outreach
+  1  Read Settings + Prompts + already-processed URLs from the Google Sheet (bad values fall back to defaults)
   2  Fetch: Himalayas · RemoteOK · Jobicy   →  every posting gets title, company, location, description, URL, languages
   3  Rule filter: title keywords · excluded companies/agencies · max age · duplicates        (no AI cost)
   4  AI check per new job  →  JSON {remote, English, relevant, agency, languages, reason}
-  5  AI outreach email for each job that passes all three
+  5  AI outreach email for each job that passes all three  (quality-checked; regenerated if not clean)
   6  Write Leads + Rejected, then the Run Log row  ·  save JSON / CSV / console log  ·  verify the live Sheet
   AI: OpenRouter (primary)  ──fails or hits its limit──►  Cloudflare Workers AI (backup)  ──both fail──►  retried next run</div>
+
+<h3>How to verify Task 1 in 5 minutes</h3>
+<ol style="margin:0 0 8px 18px;padding:0">
+  <li>Open the <b>Sheet</b>. In <b>Leads</b>, compare 2–3 messages with their Job Posting URL; each is specific to its posting.</li>
+  <li><b>Rejected</b> shows why each job was dropped (the failed check in red). <b>Prompts</b> and <b>Settings</b> show what's configurable. <b>Run Log</b> shows every run.</li>
+  <li>Open <b>Run it now</b> and press the button. About 3–6 minutes later a new <b>Run Log</b> row appears with Trigger "Run now (public link)". Optional: first set <code>Settings → outreach_prompt</code> to <code>v2_direct</code>.</li>
+  <li>In the repo, open <code>task1-job-outreach/sample-output/</code> for the CSV/JSON output and the newest run's console log.</li>
+  <li>Optional: run <code>python task1-job-outreach/scripts/verify_sheet.py</code>; expect 13/13 PASS.</li>
+</ol>
 
 <h3>Requirements, as written in the brief</h3>
 <table class="grid">
@@ -91,7 +105,7 @@
   <tr><td><span class="tick">✓</span> Genuinely personalised message per posting</td><td>Each message cites duties, tools or details from that posting. Facts about us come only from the Sheet's "About us" setting, so nothing is invented.</td></tr>
   <tr><td><span class="tick">✓</span> Easily interchangeable prompt</td><td>Prompts live in the Sheet's <b>Prompts</b> tab, and changing <code>Settings → outreach_prompt</code> switches them. Each lead records <b>Prompt Used</b>; both <code>v1_warm</code> and <code>v2_direct</code> were tested live.</td></tr>
   <tr><td><span class="tick">✓</span> Google Sheet columns</td><td>The 6 required columns come first, in order, then Language, Source, dates, Prompt Used, AI Model, <b>Status</b> (a dropdown) and Notes.</td></tr>
-  <tr><td><span class="tick">✓</span> Daily or weekly schedule</td><td>GitHub Actions, daily at about 06:00 UTC, with a backup run at 12:00 UTC if GitHub skips the morning slot; one edit makes it weekly. A "Run workflow" button runs it on demand.</td></tr>
+  <tr><td><span class="tick">✓</span> Daily or weekly schedule</td><td>GitHub Actions, daily at about 06:07 UTC; one edit makes it weekly. GitHub's free scheduler can skip a slot, so backup slots every 3 hours plus an independent Cloudflare trigger make sure one run happens every day, and a failed run is retried up to 3 times. Anyone can also start a run from the public <b>Run now</b> page.</td></tr>
   <tr><td><span class="tick">✓</span> README: install, run, filters and prompt, troubleshooting, sales rep guide</td><td>All covered, plus a 5-minute evaluator guide. A short guide is also built into the Sheet.</td></tr>
 </table>
 
@@ -99,52 +113,49 @@
 <table class="grid">
   <tr><th style="width:30%">Deliverable</th><th>Where</th></tr>
   <tr><td>Source code: scrape, validate, LLM, Sheets</td><td><code>sources.py</code> · <code>ai.py</code> + <code>prompts/</code> · <code>ai.py</code> · <code>sheet.py</code> + <code>setup_sheet.py</code>, in <code>task1-job-outreach/</code></td></tr>
-  <tr><td>Sample data output (CSV/JSON or console)</td><td>All three, in <code>sample-output/latest/</code>, refreshed automatically after every run</td></tr>
+  <tr><td>Sample data output (CSV/JSON or console)</td><td>All three, in <code>sample-output/</code>, refreshed automatically after every run</td></tr>
   <tr><td>Scheduling setup</td><td><code>.github/workflows/job-outreach.yml</code>, documented in README section 5</td></tr>
   <tr><td>README</td><td><code>task1-job-outreach/README.md</code></td></tr>
-  <tr><td>Populated Google Sheet</td><td>The link on page 1: leads, rejections with reasons, and run history</td></tr>
+  <tr><td>Populated Google Sheet</td><td>The link at the top of this task: leads, rejections with reasons, and run history</td></tr>
 </table>
 
 <h3>Results and testing</h3>
 <div class="stats">
-  <div class="stat"><b>~340</b><span>postings fetched per run (3 boards)</span></div>
-  <div class="stat"><b>37</b><span>leads written, each with a personalised email</span></div>
-  <div class="stat"><b>36</b><span>rejections, each with a reason</span></div>
-  <div class="stat"><b>12/12</b><span>live Sheet checks pass after every run</span></div>
+  <div class="stat"><b>~345</b><span>postings fetched per run (3 boards)</span></div>
+  <div class="stat"><b>39</b><span>leads written, each with a personalised email</span></div>
+  <div class="stat"><b>37</b><span>rejections, each with a reason</span></div>
+  <div class="stat"><b>13/13</b><span>live Sheet checks pass after every run</span></div>
 </div>
 <ul>
-  <li><b>12 offline unit tests</b> (filtering, language detection, parsing, formatting, AI failover) run before every scheduled run.</li>
-  <li><b><code>verify_sheet.py</code></b> checks the live Sheet after every run: columns, no blanks, no duplicates, sources, personalised and unique messages, rejection logic, freshness. It needs no login, so anyone can run it.</li>
-  <li><b>Tested live:</b>
-    <ul>
-      <li>OpenRouter's limit ran out mid-test, and Cloudflare took over with 0 errors.</li>
-      <li>The prompt was swapped from the Sheet.</li>
-      <li>Duplicates were skipped.</li>
-      <li>Dry run.</li>
-    </ul>
-  </li>
+  <li><b>17 offline unit tests</b> (filtering, language detection, parsing, formatting, AI failover, quality checks, broken Settings) run before every run.</li>
+  <li><b><code>verify_sheet.py</code></b> checks the live Sheet after every run: columns, no blanks, no duplicates, sources, clean, personalised and unique messages, rejection logic, freshness. It needs no login, so anyone can run it.</li>
+  <li><b>Tested live:</b> OpenRouter's limit ran out mid-test and Cloudflare took over with 0 errors; the prompt was swapped from the Sheet; duplicates were skipped; dry run; the Run now page.</li>
   <li><b>Problems found and fixed during testing:</b>
     <ul>
-      <li>The model invented details (a language skill, tool expertise).</li>
-      <li>An incomplete AI answer caused a false rejection; it's now retried instead.</li>
-      <li>"Must work Eastern Time hours" was wrongly judged non-remote.</li>
+      <li>The model invented details (a language skill, tool expertise): prompts tightened, messages rewritten.</li>
+      <li>The backup model sometimes leaked its hidden reasoning into a message: replies are now cleaned and quality-checked, and the 2 affected messages were rewritten.</li>
+      <li>An incomplete AI answer caused a false rejection, and one job was marked "not English" only because English wasn't mentioned: both fixed.</li>
+      <li>GitHub skipped the first scheduled run: backup slots and the Cloudflare trigger were added.</li>
     </ul>
   </li>
 </ul>
 <img class="shot crop" src="../task1-job-outreach/docs/images/sheet-leads.png" alt="Leads tab">
-<div class="cap">The Leads tab: the six required columns first, then the AI-written message, language requirements, source, prompt used, AI model and a Status dropdown for the sales rep.</div>
+<div class="cap">The Leads tab: the six required columns first (the AI-written message highlighted in yellow), then language requirements, source, dates, prompt used, AI model and a Status dropdown for the sales rep. Rows alternate in colour so long rows are easy to follow.</div>
+<img class="shot crop" src="../task1-job-outreach/docs/images/sheet-rejected.png" alt="Rejected tab">
+<div class="cap">The Rejected tab: every job the AI filtered out, with Yes/No for each check (the failed one in red) and the AI's reason.</div>
 
-<h3>How to verify Task 1 in 5 minutes</h3>
-<ol style="margin:0 0 8px 18px;padding:0">
-  <li>Open the Sheet. In <b>Leads</b>, compare 2–3 messages with their Job Posting URL; each is specific to its posting.</li>
-  <li><b>Rejected</b> shows why each job was dropped. <b>Prompts</b> and <b>Settings</b> show what's configurable. <b>Run Log</b> shows the daily runs.</li>
-  <li>In the repo, open <code>task1-job-outreach/sample-output/latest/</code> for the newest run's console log, JSON and CSV.</li>
-  <li>Optional: run <code>python task1-job-outreach/scripts/verify_sheet.py</code>; expect 12/12 PASS.</li>
-</ol>
+
 <p class="muted"><b>Process note:</b> I first built this in n8n on a self-hosted server. It worked, and its testing drove the fixes above. I then moved it to Python on GitHub Actions so nothing depends on a server staying alive during the evaluation.</p>
 
 <div class="page-break"></div>
 <h2>Task 2 – Executive Travel Planner (Notion)</h2>
+
+<div class="box links">
+  <table>
+    <tr><td>Notion page (public)</td><td><a href="NOTION_PUBLIC_URL">NOTION_PUBLIC_URL_TEXT</a></td></tr>
+    <tr><td>README</td><td><a href="https://github.com/benjaminkariuki/ray-ai-automation-case-study/tree/main/task2-travel-planner">task2-travel-planner/README.md</a></td></tr>
+  </table>
+</div>
 
 <h3>What I built</h3>
 <p>The page <b>"Executive Travel Planner – Benjamin Kariuki"</b> is published to the web, view-only. It has:</p>

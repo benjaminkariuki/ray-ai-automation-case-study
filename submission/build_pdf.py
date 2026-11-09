@@ -2,6 +2,7 @@
 
 Fills in Task 2 automatically:
   - the public Notion link from ../.secrets/notion.txt (line `public_url=...`), or a clear "pending" note;
+  - the Task 1 "Run now" page link from ../.secrets/runnow.txt (line `url=...`), or a "pending" note;
   - Notion screenshots from ../task2-travel-planner/docs/images/ when they exist.
 """
 import pathlib
@@ -27,6 +28,16 @@ if public_url:
 else:
     html = html.replace('<a href="NOTION_PUBLIC_URL">NOTION_PUBLIC_URL_TEXT</a>',
                         '<span style="color:#b00">PENDING: public link added after "Share to web"</span>')
+
+run_now_file = ROOT / ".secrets" / "runnow.txt"  # line `url=https://...workers.dev`
+run_now = ""
+if run_now_file.exists():
+    m = re.search(r"^url=(\S+)", run_now_file.read_text(encoding="utf-8"), re.M)
+    run_now = m.group(1).strip().rstrip("/") if m else ""
+if run_now:
+    html = html.replace("RUN_NOW_URL_TEXT", run_now.removeprefix("https://")).replace("RUN_NOW_URL", run_now)
+else:
+    html = html.replace('<a href="RUN_NOW_URL">RUN_NOW_URL_TEXT</a>', '<span style="color:#b00">PENDING: Run now page</span>')
 
 shots = [("notion-overview.png", "The planner page: a short guide for the EA and the founder, then the Trips database "
                                  "(Upcoming – Timeline view)."),
@@ -57,4 +68,4 @@ with sync_playwright() as p:
     browser.close()
 TMP.unlink()
 print(f"Wrote {OUT.name}: {OUT.stat().st_size / 1024 / 1024:.2f} MB | Notion link: {'yes' if public_url else 'PENDING'} "
-      f"| Task 2 screenshots: {len(parts)}")
+      f"| Run now link: {'yes' if run_now else 'PENDING'} | Task 2 screenshots: {len(parts)}")

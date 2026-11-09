@@ -42,6 +42,8 @@ async function startRun(env, trigger) {
   if (r.status !== 204) throw new Error(`GitHub API returned ${r.status}: ${(await r.text()).slice(0, 200)}`);
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const when = (iso) => { const d = new Date(iso); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}, ${iso.slice(11, 16)} UTC`; };
 const minutesAgo = (iso) => (Date.now() - Date.parse(iso)) / 60000;
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
@@ -58,7 +60,7 @@ function page({ runs, notice, error }) {
   const waitingForNewRun = notice === NOTICES.started && !runs.some((r) => minutesAgo(r.created_at) < 2);
   const refresh = active ? 20 : waitingForNewRun ? 4 : 0;
   const rows = runs
-    .map((r) => `<tr><td>${esc(r.created_at.replace("T", " ").slice(0, 16))} UTC</td><td>${esc(r.display_title)}</td>
+    .map((r) => `<tr><td class="nw">${esc(when(r.created_at))}</td><td>${esc(r.display_title)}</td>
       <td>${statusBadge(r)}</td><td><a href="${esc(r.html_url)}" target="_blank" rel="noopener">details</a></td></tr>`)
     .join("");
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -79,7 +81,7 @@ ${refresh ? `<meta http-equiv="refresh" content="${refresh}">` : ""}
   table{width:100%;border-collapse:collapse;font-size:.93rem}td,th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
   .b{display:inline-block;border-radius:999px;padding:1px 9px;font-size:.85rem;white-space:nowrap}
   .ok{background:var(--ok);color:var(--okt)}.bad{background:var(--bad);color:var(--badt)}.run{background:var(--run);color:var(--runt)}.grey{background:var(--line)}
-  ol{padding-left:20px;margin:.4rem 0}.wrap{overflow-x:auto}
+  ol{padding-left:20px;margin:.4rem 0}.wrap{overflow-x:auto}.nw{white-space:nowrap}
 </style></head><body><main>
 <h1>RAY Task 1 – run the job-outreach automation</h1>
 <p class="mute">For evaluators: start the same GitHub Actions run that happens every day, without a GitHub account.</p>

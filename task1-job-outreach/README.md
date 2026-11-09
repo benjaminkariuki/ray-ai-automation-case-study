@@ -13,7 +13,8 @@ It runs on GitHub's servers, so there's no server of our own to keep alive.
 
 | | |
 |---|---|
-| **Google Sheet (dashboard)** | https://docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI |
+| **Google Sheet (dashboard)** | https://docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI (anyone with the link can view and edit) |
+| **Run it now** | https://ray-run-now.run-now.workers.dev: a public page that starts a run, no GitHub account needed |
 | **Run history** | https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml |
 | **Source code** | [job_outreach/](job_outreach/) |
 | **Schedule** | [.github/workflows/job-outreach.yml](../.github/workflows/job-outreach.yml) |
@@ -30,20 +31,22 @@ It runs on GitHub's servers, so there's no server of our own to keep alive.
 | 2 | **Validation works** | **Rejected** tab: each rejected job shows Yes/No for Remote, English, Relevant and Agency, plus the AI's reason. |
 | 3 | **Personalised messages** | Compare 2–3 messages in **Leads** with their **Job Posting URL**. Each one cites duties or details from that specific posting. |
 | 4 | **Interchangeable prompt** | **Prompts** tab: two outreach prompts, `v1_warm` and `v2_direct`. The **Prompt Used** column in Leads shows both were used, switched from the Settings tab with no code change. |
-| 5 | **Scheduling** | Open the **Run history** link above. Scheduled runs appear daily at about 06:00 UTC. GitHub's free scheduler occasionally skips a slot, so a backup run at about 12:00 UTC fills in on those days. The full logs need a free GitHub sign-in. The Sheet's **Run Log** tab records the same runs. |
-| 6 | **Console and sample output** | [sample-output/latest/](sample-output/latest/) holds the newest run's console output (`.log`), its JSON (every scraped posting and AI decision) and CSV. No sign-in needed. |
-| 7 | **Automated check** | `python scripts/verify_sheet.py` checks the live Sheet against every requirement. It needs no login or packages. It also runs automatically after every scheduled run. |
+| 5 | **Scheduling** | Open the **Run history** link above: one *Daily run* per day (about 06:07 UTC, or a later backup slot if GitHub skipped it; see section 5). The Sheet's **Run Log** tab records every run; scheduled ones show a green **Schedule** trigger. The full GitHub logs need a free sign-in. |
+| 6 | **Run it yourself** | Open the **Run it now** page above and press the button. About 3–6 minutes later a new **Run Log** row appears with Trigger *Run now (public link)*, and any new leads are at the bottom of **Leads**. Anyone with the link can edit the Sheet, so you can first set **Settings → outreach_prompt** to `v2_direct` to see the other prompt in action. |
+| 7 | **Console and sample output** | [sample-output/](sample-output/) has a CSV of each Sheet tab, and [latest/](sample-output/latest/) holds the newest run's console output (`.log`), its JSON (every scraped posting and AI decision) and CSV. No sign-in needed. |
+| 8 | **Automated check** | `python scripts/verify_sheet.py` checks the live Sheet against every requirement (13 checks). It needs no login or packages. It also runs automatically after every run. |
 
 ```text
 $ python scripts/verify_sheet.py
   [PASS] Required columns, in order: Job Posting URL, Job Title, Company Name, Location, Job Description, LLM-Generated Outreach Message
   [PASS] Leads present / No empty required fields / No duplicate jobs
   [PASS] Compliant non-LinkedIn sources: Himalayas, Jobicy
-  [PASS] Messages are unique / Messages reference the specific posting: 37/37
+  [PASS] Messages are unique / Messages are clean (no AI artifacts)
+  [PASS] Messages reference the specific posting: 39/39 name the company or quote details found only in their own posting
   [PASS] Prompt is interchangeable (tracked per lead): prompts used: v1_warm, v2_direct
   [PASS] AI provider recorded per lead
-  [PASS] Every rejection failed a check / Automation ran in the last 30 hours / Latest run healthy
-12/12 checks passed.
+  [PASS] Every rejection failed a check / Automation ran in the last 36 hours / Latest run healthy
+13/13 checks passed.
 ```
 
 ### Where each deliverable is
@@ -55,8 +58,8 @@ $ python scripts/verify_sheet.py
 | Source code: **Sheets** | [sheet.py](job_outreach/sheet.py) (reads settings, writes rows) and [setup_sheet.py](scripts/setup_sheet.py) (builds and formats the Sheet) |
 | Orchestration | [pipeline.py](job_outreach/pipeline.py) runs the whole flow; [`__main__.py`](job_outreach/__main__.py) is the command line |
 | Tests | [tests/](tests/) (offline unit tests run before every scheduled run) and [verify_sheet.py](scripts/verify_sheet.py) (live checks) |
-| Sample data output | [sample-output/](sample-output/): Sheet exports, plus the newest run's console `.log`, `.json` and `.csv` in `latest/` |
-| Scheduling setup | [job-outreach.yml](../.github/workflows/job-outreach.yml): GitHub Actions, daily at 06:00 UTC (section 5) |
+| Sample data output | [sample-output/](sample-output/): Sheet exports, plus the newest run's console `.log`, `.json` and `.csv` in `latest/` (both refreshed after every run) |
+| Scheduling setup | [job-outreach.yml](../.github/workflows/job-outreach.yml) (GitHub Actions, daily with backups) and [run-now/](run-now/) (public Run now page + independent backup trigger) |
 | README | This file |
 | Populated Google Sheet | The link at the top |
 
@@ -65,15 +68,16 @@ $ python scripts/verify_sheet.py
 ## 2. How it works
 
 ```
-GitHub Actions (daily 06:00 UTC, or "Run workflow")
-  └─ python -m job_outreach
-       1. Read Settings + Prompts + already-processed URLs from the Google Sheet
+GitHub Actions (daily ~06:07 UTC + backup slots, the public "Run now" page, or "Run workflow")
+  └─ python -m job_outreach                      (retried up to 3 times if it fails)
+       1. Read Settings + Prompts + already-processed URLs from the Google Sheet (bad values → defaults)
        2. Fetch jobs: Himalayas (search) · RemoteOK (assistant tag) · Jobicy (Admin & Support)
        3. Filter: title keywords, excluded companies, max age, duplicates  (no AI cost)
        4. AI check per job → strict JSON: remote? English? relevant? agency? languages, reason
-       5. AI outreach email for each job that passes all three (and isn't an agency)
+       5. AI outreach email for each job that passes all three (and isn't an agency); drafts that fail
+          the quality check (no subject, wrong length, leaked model text, repetition) are regenerated
        6. Write Leads + Rejected, then a Run Log row; save JSON/CSV of the run
-  └─ verify_sheet.py re-checks the live Sheet; the run's output is committed to sample-output/latest/
+  └─ verify_sheet.py re-checks the live Sheet; the run's output and Sheet exports are committed to sample-output/
 ```
 
 ### AI providers and how failover works
@@ -91,7 +95,10 @@ OpenRouter (primary: Nemotron 3 Ultra → Gemma 4 as its own fallback)
 - **Cost cap.** `max_jobs_per_run` limits how many jobs go to the AI in one run.
 - **Fault-tolerant sources.** If one job board fails, the others still run.
 - **No server to maintain.** GitHub runs the job. Every run is tested first (offline unit tests) and checked afterwards (`verify_sheet.py`). If anything fails, the badge turns red and GitHub emails the repo owner.
+- **One run every day, even if GitHub skips a slot.** GitHub's free scheduler can delay or drop cron runs when it's busy (it skipped this project's first 06:00 run). So the workflow has backup slots every 3 hours (09:07–21:07 UTC), and a separate Cloudflare cron trigger (07:40, 13:40, 19:40 UTC) can start it too. A backup only runs if no daily run has succeeded yet that day, and a failed run is retried up to 3 times, 5 minutes apart.
 - **The schedule never goes idle.** Each run commits its output, which keeps the repo active, so GitHub doesn't pause the schedule.
+- **Clean messages only.** Some models occasionally return their hidden reasoning or chat tokens. Replies are cleaned, and a draft without a subject line, of the wrong length, with leaked model text or with runaway repetition is regenerated instead of being saved. `verify_sheet.py` re-checks every message.
+- **Safe to edit.** Anyone with the link can edit the Sheet. Header rows are protected with a warning, and if a setting is invalid (e.g. a misspelt prompt name or `max_jobs_per_run = lots`), the run uses the default and writes a `SETTINGS WARNING` line in its log instead of stopping. A deleted column or tab is recreated.
 
 ---
 
@@ -110,6 +117,8 @@ OpenRouter (primary: Nemotron 3 Ultra → Gemma 4 as its own fallback)
 | Settings | Search terms, filters, AI models and sender details |
 | Prompts | The AI instructions, as plain text |
 | Run Log | One row per run: trigger, fetched, filtered, checked, added, rejected, errors and backup use |
+
+**Colours:** rows alternate so long rows are easy to follow, and the outreach message column is yellow. In **Rejected**, each check is green when passed and red when it caused the rejection. In **Run Log**, scheduled runs are green, AI errors red and backup-AI use amber. In **Settings**, the yellow **Value** column is the part you edit.
 
 > Don't delete rows in Leads or Rejected; the automation uses them to avoid duplicates. Use **Not a Fit** instead. Deleting a row deliberately makes the job get re-checked on the next run.
 
@@ -185,15 +194,29 @@ The schedule is in [.github/workflows/job-outreach.yml](../.github/workflows/job
    - `CLOUDFLARE_ACCOUNT_ID`
    - `CLOUDFLARE_API_TOKEN`
 
-That's it. It runs daily at about 06:00 UTC, with a 12:00 UTC backup if GitHub skips the morning slot.
+That's it. It runs daily at about 06:07 UTC; if GitHub skips that slot, the next backup slot (every 3 hours) runs instead.
 
 | Task | How |
 |---|---|
-| Run now | **Actions → Task 1 - EA Job Outreach → Run workflow**. Optional inputs: max jobs, dry run |
-| Change the schedule | Edit `cron: "0 6 * * *"` in the workflow file, for example `"0 6 * * 1"` for weekly on Mondays |
+| Run now | **Actions → Task 1 - EA Job Outreach → Run workflow** (repo owner). Optional inputs: max jobs, dry run. Anyone else: the public **Run it now** page |
+| Change the schedule | Edit the `cron:` lines in the workflow file. For weekly on Mondays, end every line with `1` instead of `*` (e.g. `"7 6 * * 1"`), and do the same in `run-now/wrangler.toml` |
 | Pause | **Actions → the workflow → ••• → Disable workflow** |
 | History | The **Actions** tab (logs and summary for each run, signed in), the Sheet's **Run Log**, and `sample-output/latest/` |
 | Other schedulers | Any machine can run it with cron (`0 6 * * * cd /path/task1-job-outreach && python -m job_outreach`) or Windows Task Scheduler |
+
+### The public "Run now" page (optional)
+GitHub only lets people with write access press **Run workflow**, so [run-now/](run-now/) holds a tiny **Cloudflare Worker** (free plan) that gives evaluators a button instead. It also runs a **backup daily trigger** at 07:40, 13:40 and 19:40 UTC that starts the run only if no daily run has succeeded that day.
+
+- It uses a **fine-grained GitHub token** limited to this repository with only **Actions: read and write**, so it can start and list runs, but can't read secrets or change code.
+- A **15-minute cooldown** and "one run at a time" stop anyone from spamming it; jobs already processed are skipped anyway.
+
+To deploy your own (Node.js 18+, from `task1-job-outreach/run-now/`):
+```bash
+npx wrangler@4 login                       # opens the browser: click Allow
+npx wrangler@4 secret put GITHUB_TOKEN     # paste the fine-grained token
+npx wrangler@4 deploy                      # prints the https://ray-run-now.<you>.workers.dev URL
+```
+Change `REPO` and `SHEET_URL` at the top of `worker.js` if you forked the repository.
 
 ---
 
@@ -205,10 +228,12 @@ That's it. It runs daily at about 06:00 UTC, with a 12:00 UTC backup if GitHub s
 | **LLM Errors** > 0 | Both AI providers failed, or a reply was incomplete | Nothing to do: those jobs retry next run. If it persists, change `backup_model` |
 | Checked by LLM = 0 | No *new* matching jobs (all already seen) | Normal on quiet days. Broaden `search_queries` or the keywords, or raise `himalayas_pages_per_query` |
 | Good job in **Rejected** | AI judged it non-remote, non-English or an agency | Read the Reason. Adjust the `validation` prompt or settings, then delete the row to have it re-checked |
-| `outreach_prompt is "…" but the Prompts tab has no row with that name` | Typo in Settings | Use the exact Prompt Name from the Prompts tab |
+| `SETTINGS WARNING` in the run log | A Settings or Prompts value is invalid (e.g. a misspelt prompt name) | The run used the default instead. Fix the value; the warning says which one |
+| No *Schedule* row in the Run Log today | GitHub skipped the morning slot | Nothing to do: a backup slot or the Cloudflare trigger runs it later the same day |
+| Run now page says "cooldown" or "already in progress" | A run started less than 15 minutes ago, or is still running | Wait for it to finish (the page refreshes itself), then try again |
 | `SHEET_ID is not set` or a credentials message | Missing `.env` value or GitHub secret | Fill in `.env` locally, or add the secret or variable in GitHub |
 | Google `PERMISSION_DENIED` / 404 | Sheet not shared with the service account, or wrong ID | Share as Editor and check the ID |
-| `Tab 'Leads' is missing columns` | Sheet created by an older version | Re-run `scripts/setup_sheet.py`, which adds the columns |
+| A column or tab was deleted | Someone edited the Sheet structure | The next run recreates it at the end; re-run `scripts/setup_sheet.py` to restore order and formatting |
 | Want existing messages in a new tone | Prompts only affect new leads | `python scripts/rewrite_messages.py --rows 2 3 4` rewrites chosen rows with the current prompt |
 | Badge is red / failure email | One of: tests, run or Sheet check failed | Open the failed run in **Actions**; the failing step and its log show why |
 
@@ -238,7 +263,9 @@ task1-job-outreach/
 ├── scripts/setup_sheet.py # creates, formats and migrates the Google Sheet
 ├── scripts/verify_sheet.py# checks the live Sheet against the requirements (no login needed)
 ├── scripts/rewrite_messages.py # re-writes existing messages after a prompt change
-├── tests/                 # offline unit tests (filtering, parsing, formatting, failover)
+├── scripts/export_sheet.py# exports the Sheet tabs to sample-output/*.csv (run after every run)
+├── run-now/               # Cloudflare Worker: public "Run now" page + backup daily trigger
+├── tests/                 # offline unit tests (filtering, parsing, formatting, failover, safeguards)
 ├── sample-output/         # Sheet exports + latest/ (newest run, committed automatically)
 ├── docs/                  # TEST_REPORT.md + screenshots
 ├── requirements.txt
