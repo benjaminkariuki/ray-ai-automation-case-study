@@ -70,6 +70,14 @@ def main():
                 if r["Company Name"].split()[0].lower() in r["LLM-Generated Outreach Message"].lower()
                 or len({w for w in ws if freq[w] < limit} & words(r["LLM-Generated Outreach Message"])) >= 2]
     check("Messages are unique", len(set(msgs)) == len(msgs), f"{len(set(msgs))} distinct messages")
+    # Clean = subject line, sensible length, no leaked model tokens/reasoning, no runaway repetition.
+    dirty = [i + 2 for i, m in enumerate(msgs)
+             if not m.lstrip().lower().startswith("subject:") or not 40 <= len(m.split()) <= 320
+             or re.search(r"<\||\|>|assistantfinal|^\s*analysis\b", m, re.I | re.M)
+             or re.search(r"\b(\w+)(?:\s+\1\b){4,}", m, re.I)]
+    check("Messages are clean (no AI artifacts)", not dirty,
+          "all start with a subject line, 40-320 words, no model tokens or repetition" if not dirty
+          else f"problems in rows {dirty}")
     check("Messages reference the specific posting", len(personal) == len(leads),
           f"{len(personal)}/{len(leads)} name the company or quote details found only in their own posting")
     prompts = sorted({r.get("Prompt Used", "") for r in leads} - {""})
@@ -81,9 +89,9 @@ def main():
     check("Every rejection failed a check", not bad and len(rejected) > 0,
           f"{len(rejected)} rejected, each with Remote/English/Relevant = No or Agency = Yes, plus a reason")
     last = max((datetime.strptime(r["Run Time (UTC)"][:16], "%Y-%m-%d %H:%M") for r in runlog), default=None)
-    fresh = last and datetime.now(timezone.utc).replace(tzinfo=None) - last < timedelta(hours=30)
+    fresh = last and datetime.now(timezone.utc).replace(tzinfo=None) - last < timedelta(hours=36)
     triggers = sorted({r.get("Trigger", "") for r in runlog} - {""})
-    check("Automation ran in the last 30 hours", bool(fresh), f"last run {last} UTC; triggers seen: {', '.join(triggers)}")
+    check("Automation ran in the last 36 hours", bool(fresh), f"last run {last} UTC; triggers seen: {', '.join(triggers)}")
     latest = runlog[-1] if runlog else {}
     checked, errors = int(latest.get("Checked by LLM") or 0), int(latest.get("LLM Errors") or 0)
     check("Latest run healthy (AI answered)", checked == 0 or errors < checked,

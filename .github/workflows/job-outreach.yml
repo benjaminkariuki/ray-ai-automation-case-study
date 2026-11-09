@@ -1,19 +1,37 @@
 # Task 1 - EA Job Outreach: runs the Python pipeline on GitHub's servers (no server of our own).
-#   - every day at about 06:00 UTC, and on demand via "Run workflow" (Actions tab)
-#   - GitHub's free scheduler sometimes skips cron runs when it is busy, so a backup slot at about 12:00 UTC
-#     runs only if no scheduled run has succeeded yet that day (the "gate" job checks this)
-#   - unit tests first, then the live run, then a check of the live Google Sheet against the requirements
-#   - the run's JSON/CSV output is committed to task1-job-outreach/sample-output/latest/ (fresh sample data,
-#     and the commit keeps the repository active so GitHub never pauses the schedule)
-# A failed run turns the badge red and GitHub emails the repository owner.
+#
+# When it runs
+#   - Daily at about 06:07 UTC. GitHub's free scheduler sometimes delays or skips cron runs when it is busy, so there
+#     are backup slots every 3 hours (09:07 ... 21:07) plus an independent Cloudflare cron trigger (task1-job-outreach/
+#     run-now/). A backup only runs if no daily run has succeeded yet that day (the "gate" job checks), so there is
+#     exactly one successful daily run per day.
+#   - On demand: "Run workflow" on GitHub (repository owner), or the public "Run now" page (anyone; 15-minute cooldown).
+#
+# What a run does: unit tests -> pipeline (retried up to 3 times if it fails) -> check of the live Sheet ->
+# commit of the output to task1-job-outreach/sample-output/ (fresh sample data; the commit also keeps the
+# repository active so GitHub never pauses the schedule). A failed run turns the badge red and emails the owner.
 name: Task 1 - EA Job Outreach
+run-name: >-
+  ${{ github.event_name == 'schedule' && 'Daily run (GitHub schedule)'
+  || inputs.trigger == 'daily-backup' && 'Daily run (backup trigger)'
+  || inputs.trigger == 'run-now' && 'Run now (public link)'
+  || 'Manual run' }}
 
 on:
   schedule:
-    - cron: "7 6 * * *"    # main daily run (7 minutes past the hour: the top of the hour is GitHub's busiest time)
-    - cron: "7 12 * * *"   # backup: runs only if the 06:07 run was skipped
+    - cron: "7 6 * * *"     # main daily run (7 minutes past the hour: the top of the hour is GitHub's busiest time)
+    - cron: "7 9 * * *"     # backup slots: each runs only if no daily run has succeeded yet today
+    - cron: "7 12 * * *"
+    - cron: "7 15 * * *"
+    - cron: "7 18 * * *"
+    - cron: "7 21 * * *"
   workflow_dispatch:
     inputs:
+      trigger:
+        description: "Who started it (manual = you, here)"
+        type: choice
+        options: [manual, run-now, daily-backup]
+        default: manual
       max_jobs:
         description: "Max new jobs to send to the AI (blank = value in the Sheet's Settings tab)"
         required: false
@@ -41,14 +59,16 @@ jobs:
       - id: check
         env:
           GH_TOKEN: ${{ github.token }}
+          IS_DAILY: ${{ github.event_name == 'schedule' || inputs.trigger == 'daily-backup' }}
         run: |
-          if [ "${{ github.event.schedule }}" != "7 12 * * *" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-          done_today=$(gh run list -R "${{ github.repository }}" -w job-outreach.yml -e schedule -s success --created ">=$(date -u +%F)" --json databaseId --jq length)
+          if [ "$IS_DAILY" != "true" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          done_today=$(gh run list -R "${{ github.repository }}" -w job-outreach.yml -s success -L 50 \
+            --created ">=$(date -u +%F)" --json displayTitle --jq '[.[] | select(.displayTitle | startswith("Daily run"))] | length')
           if [ "$done_today" -gt 0 ]; then
-            echo "Today's scheduled run already succeeded - backup slot not needed." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "Today's daily run already succeeded - this backup slot is not needed." | tee -a "$GITHUB_STEP_SUMMARY"
             echo "go=false" >> "$GITHUB_OUTPUT"
           else
-            echo "The 06:07 scheduled run was skipped by GitHub - running now as the backup." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "No successful daily run yet today - running now." | tee -a "$GITHUB_STEP_SUMMARY"
             echo "go=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -56,7 +76,7 @@ jobs:
     needs: gate
     if: needs.gate.outputs.go == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 50
     defaults:
       run:
         working-directory: task1-job-outreach
@@ -66,7 +86,11 @@ jobs:
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      RUN_TRIGGER: ${{ github.event_name == 'schedule' && 'Schedule (GitHub Actions)' || 'Manual (GitHub Actions)' }}
+      RUN_TRIGGER: >-
+        ${{ github.event_name == 'schedule' && 'Schedule (GitHub Actions)'
+        || inputs.trigger == 'daily-backup' && 'Schedule (backup trigger)'
+        || inputs.trigger == 'run-now' && 'Run now (public link)'
+        || 'Manual (GitHub Actions)' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -77,32 +101,43 @@ jobs:
           cache-dependency-path: task1-job-outreach/requirements.txt
 
       - name: Install
-        run: pip install -r requirements.txt
+        run: |
+          for attempt in 1 2 3; do pip install -r requirements.txt && exit 0; sleep 30; done; exit 1
 
       - name: Unit tests (offline)
         run: python -m pytest -q tests
 
-      - name: Run the pipeline
+      - name: Run the pipeline (up to 3 attempts)
         run: |
           ARGS=""
           if [ -n "${{ inputs.max_jobs }}" ]; then ARGS="$ARGS --max-jobs ${{ inputs.max_jobs }}"; fi
           if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
-          python -m job_outreach $ARGS
+          for attempt in 1 2 3; do
+            python -m job_outreach $ARGS && exit 0
+            if [ "$attempt" -lt 3 ]; then
+              echo "::warning::Attempt $attempt failed - retrying in 5 minutes (already-processed jobs are skipped)"
+              sleep 300
+            fi
+          done
+          exit 1
 
       - name: Check the live Google Sheet meets every requirement
-        run: python scripts/verify_sheet.py
+        # Reported, but never fails the daily run: anyone with the link may edit the Sheet.
+        continue-on-error: true
+        run: python scripts/verify_sheet.py || { echo "::warning::A Sheet check failed - see the log above"; exit 1; }
 
       - name: Save this run's output to the repository
         if: ${{ always() && inputs.dry_run != true }}
         run: |
           mkdir -p sample-output/latest
           rm -f sample-output/latest/*
-          cp output/* sample-output/latest/ 2>/dev/null || exit 0
+          cp output/* sample-output/latest/ 2>/dev/null || true
+          python scripts/export_sheet.py || echo "::warning::Could not export the Sheet tabs"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add sample-output/latest
+          git add sample-output
           git commit -m "Task 1 run output $(date -u +'%Y-%m-%d %H:%M') UTC [skip ci]" || exit 0
-          git pull --rebase --quiet && git push --quiet
+          for attempt in 1 2 3; do git pull --rebase --quiet && git push --quiet && exit 0; sleep 10; done
 
       - name: Upload output as an artifact
         if: always()

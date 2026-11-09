@@ -1,0 +1,11 @@
+# Cloudflare Worker: public "Run now" page + backup daily trigger for Task 1 (free plan).
+# Deploy:  npx wrangler@4 deploy            (from this folder, after `npx wrangler@4 login`)
+# Secret:  npx wrangler@4 secret put GITHUB_TOKEN   (fine-grained token: this repo only, "Actions: read and write")
+name = "ray-run-now"
+main = "worker.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+[triggers]
+# Backup for GitHub's scheduler (UTC). Each one only starts a run if no daily run has succeeded today.
+crons = ["40 7 * * *", "40 13 * * *", "40 19 * * *"]

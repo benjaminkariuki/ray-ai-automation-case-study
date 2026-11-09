@@ -20,3 +20,8 @@ task1-job-outreach/output/
 
 # Private project notes
 map.md
+
+# Cloudflare Worker local files
+.dev.vars
+.wrangler/
+node_modules/

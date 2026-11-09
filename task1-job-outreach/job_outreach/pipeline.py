@@ -32,6 +32,8 @@ def run(sheet, *, trigger="Manual", dry_run=False, max_jobs=None, log=print):
     if max_jobs is not None:
         config["max_jobs_per_run"] = max_jobs
     log(f"Settings loaded. Prompt: {config['outreach_prompt_name']} | max jobs: {config['max_jobs_per_run']}")
+    for warning in config["warnings"]:
+        log(f"SETTINGS WARNING: {warning}")
 
     jobs, source_errors = fetch_all(config)
     by_source = {s: sum(1 for j in jobs if j["source"] == s) for s in ("Himalayas", "RemoteOK", "Jobicy")}
@@ -98,7 +100,8 @@ def run(sheet, *, trigger="Manual", dry_run=False, max_jobs=None, log=print):
         log("Google Sheet updated: Leads, Rejected, Run Log.")
 
     report = {"run_at": started.isoformat(), "trigger": trigger, "dry_run": dry_run, "summary": summary,
-              "stats": stats, "source_errors": source_errors, "errors": errors, "decisions": decisions,
+              "stats": stats, "settings_warnings": config["warnings"], "source_errors": source_errors,
+              "errors": errors, "decisions": decisions,
               "scraped": [{**{k: v for k, v in j.items() if k != "posted"},
                            "posted": j["posted"].strftime("%Y-%m-%d") if j.get("posted") else ""} for j in jobs]}
     stamp = started.strftime("%Y-%m-%d_%H%M")

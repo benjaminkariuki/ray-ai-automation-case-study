@@ -77,7 +77,7 @@ class AIClient:
                 errors.append(f"OpenRouter: {exc}")
                 if "429" in str(exc) and attempt == 0:
                     break  # rate-limited/quota: go straight to the backup instead of waiting
-        for attempt in range(2):
+        for attempt in range(3):
             try:
                 self.backup_calls += 1
                 text, model = self._cloudflare(self.config["backup_model"], prompt, temperature, backup_max_tokens)
@@ -106,7 +106,7 @@ class AIClient:
             "location": job["location"], "language_requirements": verdict["languages"],
             "job_description": job["description"][:6000]})
         text, model = self.complete(prompt, primary=self.config["outreach_model"], temperature=0.7, json_mode=False,
-                                    backup_max_tokens=2500, is_usable=lambda t: len(clean_text(t)) >= 80)
+                                    backup_max_tokens=2500, is_usable=lambda t: not message_problems(clean_text(t)))
         return format_message(text, self.config["sender"]), f"{model} ({provider_of(model)})"
 
 
@@ -119,7 +119,7 @@ def parse_verdict(text):
     never as a rejection, so a good job is never dropped because a model cut its reply short."""
     if not text:
         return None
-    text = re.sub(r"<think>[\s\S]*?</think>", "", str(text))
+    text = strip_reasoning(text)
     match = re.search(r"\{[\s\S]*\}", text)
     if not match:
         return None
@@ -134,8 +134,39 @@ def parse_verdict(text):
             "languages": str(data.get("language_requirements") or "English"), "reason": str(data["reason"]).strip()}
 
 
-def clean_text(text):
+def strip_reasoning(text):
+    """Remove a model's hidden reasoning if it leaked into the reply.
+
+    Some models (e.g. gpt-oss on Cloudflare) occasionally return their raw "analysis" channel and chat tokens,
+    such as "analysis: ...<|end|><|start|>assistantfinal: Subject: ...". Only the final answer is kept."""
     text = re.sub(r"<think>[\s\S]*?</think>", "", str(text or ""))
+    final = re.split(r"(?:<\|[a-z_]+\|>)*\s*assistant\s*final\s*:?|<\|channel\|>\s*final\s*(?:<\|message\|>)?", text,
+                     flags=re.I)
+    if len(final) > 1:
+        text = final[-1]
+    return re.sub(r"<\|[a-z_]+\|>", "", text).strip()
+
+
+def message_problems(text):
+    """Reasons an outreach draft is not good enough to save (empty list = fine). A draft with problems is
+    regenerated (next provider/attempt) instead of being written to the Sheet."""
+    problems = []
+    words = text.split()
+    if not text.lstrip().lower().startswith("subject:"):
+        problems.append("no subject line")
+    if not 40 <= len(words) <= 320:
+        problems.append(f"{len(words)} words")
+    if re.search(r"<\||\|>|assistantfinal|^\s*analysis\b", text, flags=re.I | re.M):
+        problems.append("leaked model tokens")
+    if re.search(r"\b(\w+)(?:\s+\1\b){4,}", text, flags=re.I):
+        problems.append("repeated words")
+    if re.search(r"\{\{|\[(?:name|company|your name)\]", text, flags=re.I):
+        problems.append("unfilled placeholder")
+    return problems
+
+
+def clean_text(text):
+    text = strip_reasoning(text)
     text = text.replace("‐", "-").replace("‑", "-").replace(" ", " ").replace(" ", " ")
     text = re.sub(r"^```[a-z]*\n?|```$", "", text, flags=re.M | re.I)
     return re.sub(r"\*\*(.*?)\*\*", r"\1", text).strip()
