@@ -43,17 +43,17 @@ Status: ✅ met, tested live on 8–9 November 2026.
 
 | # | Brief says | How it is met | Verify | |
 |---|---|---|---|---|
-| 1 | "log trip details, view a clear timeline per journey, and generate a shareable, mobile-friendly Trip Brief" | A Trips database, plus a timeline inside every brief and timeline/calendar views; the brief is generated automatically. | Notion page | ✅ |
+| 1 | "log trip details, view a clear timeline per journey, and generate a shareable, mobile-friendly Trip Brief" | A Trips database, a day-by-day timeline inside every brief, and list, calendar and timeline views; the brief is generated automatically. | Notion page | ✅ |
 | 2 | "Trips Database — one record per trip" (single-database structure) | One **Trips** database. Each trip is one record, with 23 sample trips across Europe and the USA. | Notion → *All trips* view | ✅ |
 | 3 | "capturing: trip name, who is traveling, date range" | **Trip** (title), **Traveler**, **Travel Dates** (range) | Any trip | ✅ |
 | 4 | "all essential details (flights, hotels, addresses, confirmations, meetings, notes)" | **Flights**, **Hotel**, **Hotel Address**, **Hotel Confirmation**, flight PNRs and other confirmations, meetings in **Itinerary**, **Notes**, plus Ground Transport, Visa / Entry and Visa Notes | Any trip | ✅ |
 | 5 | "Trip Brief template — an auto-generated, shareable summary per trip" | Every trip page holds a **✈️ Trip Brief**, written automatically from its fields and refreshed within 15 minutes of any edit (GitHub Actions). | Open *London — Investor Roadshow* | ✅ |
-| 6 | "a chronological timeline of key events" | **📅 Timeline**: itinerary events sorted by date and time and grouped by day, with icons and confirmation numbers | Any brief | ✅ |
+| 6 | "a chronological timeline of key events" | **📅 Day by day**: itinerary events sorted by date and time and grouped by day, with icons and confirmation numbers; while travelling, a **Today** box comes first | Any brief | ✅ |
 | 7 | "space to attach documents (tickets, visas)" | The **Documents** files field (3 SAMPLE PDFs attached to each trip), listed in the brief, plus an **📂 Extra files & notes** area that's never overwritten | Any trip | ✅ |
 | 8 | "clear emergency/primary contact info" | A red **🆘** box near the top of every brief: primary contact (the EA, benjaminleyian50@gmail.com), emergency contact and hotel | Any brief | ✅ |
-| 9 | "Saved views — at least a timeline/calendar view of upcoming trips" | **Upcoming – Timeline** (Planned and In-Progress trips only) and **Calendar** | Notion views | ✅ |
+| 9 | "Saved views — at least a timeline/calendar view of upcoming trips" | **Upcoming trips** (the default list), **Calendar** and **Timeline**; Done trips are hidden from Upcoming and Timeline | Notion views | ✅ |
 | 10 | "an overview grouped by trip status (Planned / In-Progress / Done)" | The **By status** board, grouped by a Status property with exactly these three options | Notion views | ✅ |
 | 11 | "Notion 'Share to web' link (anyone with the link can view)" | Published to the web, view-only | Link in the PDF | ✅ |
 | 12 | "titled 'Executive Travel Planner – {Your Name}'" | **Executive Travel Planner – Benjamin Kariuki** | Page title | ✅ |
-| 13 | "everything is easy to find and the Trip Brief is founder-ready" | A short guide at the top for the EA and the founder. Briefs lead with where/when, then who to call, then the day-by-day plan, using phone-friendly blocks only. | Notion page | ✅ |
-| 14 | "Optional bonus: a short note … explaining your design choices" | "Design" section of the Task 2 README, and the PDF | [task2-travel-planner/README.md](task2-travel-planner/README.md) | ✅ |
+| 13 | "everything is easy to find and the Trip Brief is founder-ready" | Built for zero learning curve: one line at the top plus an automatic **Travelling now / Next trip** box (two taps to any brief); views show only trip, dates and countdown; raw fields on trip pages are collapsed so the brief comes first. Briefs lead with where/when/hotel, then any action needed, today, who to call and each day, using phone-friendly blocks only. | Notion page | ✅ |
+| 14 | "Optional bonus: a short note … explaining your design choices" | "Design choices" in the PDF (Task 2 section) and the "Design" section of the Task 2 README | [task2-travel-planner/README.md](task2-travel-planner/README.md) | ✅ |

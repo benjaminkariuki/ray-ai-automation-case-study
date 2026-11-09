@@ -7,39 +7,41 @@
   @page { size: A4; margin: 15mm 15mm 16mm 15mm; }
   :root { --ink:#1b2333; --muted:#5b6475; --line:#dfe3ea; --accent:#1f4e8c; --soft:#f3f6fa; --ok:#1d7a46; }
   * { box-sizing: border-box; }
-  body { font-family: "Segoe UI", Inter, Arial, sans-serif; color: var(--ink); font-size: 10pt; line-height: 1.45; margin: 0; }
-  h1 { font-size: 21pt; margin: 0 0 2px; letter-spacing: -0.3px; }
-  h2 { font-size: 15pt; margin: 0 0 8px; padding-bottom: 5px; border-bottom: 2.5px solid var(--accent); color: var(--accent); }
-  h3 { font-size: 11pt; margin: 13px 0 5px; }
+  body { font-family: "Segoe UI", Inter, Arial, sans-serif; color: var(--ink); font-size: 11.5pt; line-height: 1.5; margin: 0; }
+  h1 { font-size: 23pt; margin: 0 0 2px; letter-spacing: -0.3px; }
+  h2 { font-size: 17pt; margin: 0 0 8px; padding-bottom: 5px; border-bottom: 2.5px solid var(--accent); color: var(--accent); }
+  h3 { font-size: 13pt; margin: 15px 0 6px; }
   p { margin: 0 0 7px; }
   a { color: var(--accent); text-decoration: none; word-break: break-all; }
-  code { font-family: Consolas, monospace; font-size: 8.8pt; background: #eef1f6; padding: 0 3px; border-radius: 3px; }
+  code { font-family: Consolas, monospace; font-size: 10pt; background: #eef1f6; padding: 0 3px; border-radius: 3px; }
   .sub { color: var(--muted); margin-bottom: 12px; }
   .box { background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 9px 13px; margin: 8px 0 12px; }
   .links td { padding: 2.5px 8px 2.5px 0; vertical-align: top; }
-  .links td:first-child { font-weight: 600; white-space: nowrap; width: 175px; }
-  table.grid { width: 100%; border-collapse: collapse; margin: 4px 0 10px; font-size: 8.9pt; }
+  .links td:first-child { font-weight: 600; white-space: nowrap; width: 190px; }
+  table.grid { width: 100%; border-collapse: collapse; margin: 4px 0 10px; font-size: 10.5pt; }
   table.grid th { background: var(--ink); color: #fff; text-align: left; padding: 5px 7px; font-weight: 600; }
   table.grid td { border-bottom: 1px solid var(--line); padding: 4.5px 7px; vertical-align: top; }
   table.grid tr:nth-child(even) td { background: #fafbfd; }
   .tick { color: var(--ok); font-weight: 700; }
   ul { margin: 0 0 6px 18px; padding: 0; } li { margin-bottom: 2px; }
   .shot { width: 100%; border: 1px solid var(--line); border-radius: 6px; margin: 4px 0 2px; }
-  .cap { color: var(--muted); font-size: 8.5pt; margin-bottom: 10px; }
+  .cap { color: var(--muted); font-size: 10pt; margin-bottom: 10px; }
   .two { display: flex; gap: 12px; align-items: flex-start; }
   .two > div { flex: 1; }
   .phone { width: 100%; max-width: 230px; border: 1px solid var(--line); border-radius: 14px; }
   .stats { display: flex; gap: 8px; margin: 6px 0 10px; }
   .stat { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; background: var(--soft); }
-  .stat b { display: block; font-size: 14pt; color: var(--accent); }
-  .stat span { font-size: 8.4pt; color: var(--muted); }
-  .flow { font-family: Consolas, monospace; font-size: 8.6pt; background: #f7f9fc; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; white-space: pre; line-height: 1.5; }
+  .stat b { display: block; font-size: 16pt; color: var(--accent); }
+  .stat span { font-size: 9.8pt; color: var(--muted); }
+  .flow { font-family: Consolas, monospace; font-size: 9.6pt; background: #f7f9fc; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; white-space: pre; line-height: 1.5; }
   .page-break { break-before: page; }
   h2, h3 { break-after: avoid; }
   tr, .shot, .stats, .flow, .box, li, .two { break-inside: avoid; }
   .muted { color: var(--muted); }
   .crop-ov { height: 370px; object-fit: cover; object-position: top center; }
   .crop { height: 205px; object-fit: cover; object-position: top left; }
+  .note { border-left: 4px solid var(--accent); background: var(--soft); padding: 9px 14px; margin: 8px 0 12px; border-radius: 0 8px 8px 0; }
+  .note ol { margin: 4px 0 2px 20px; padding: 0; } .note li { margin-bottom: 5px; }
 </style>
 </head>
 <body>
@@ -158,45 +160,49 @@
 </div>
 
 <h3>What I built</h3>
-<p>The page <b>"Executive Travel Planner – Benjamin Kariuki"</b> is published to the web, view-only. It has:</p>
-<ul>
-  <li>A short <b>guide</b> for the EA and the founder.</li>
-  <li><b>One Trips database</b>, populated with <b>23 sample trips to Europe and the USA</b>: 7 Done, 1 In-Progress, 15 Planned.</li>
-  <li><b>4 saved views.</b></li>
-  <li>An <b>auto-generated Trip Brief</b> inside every trip.</li>
-</ul>
-<p>The workspace was built with the Notion API (Python), so it's reproducible with one command.</p>
+<p>One Notion page, <b>"Executive Travel Planner – Benjamin Kariuki"</b>, published to the web (view-only). It holds <b>one Trips database</b> with <b>23 sample trips to Europe and the USA</b> (7 Done, 1 In-Progress, 15 Planned), five saved views, and an <b>automatically generated Trip Brief inside every trip</b>. The whole workspace was built with the Notion API (Python), so it can be recreated with one command.</p>
 
+<h3>Design choices (the optional note)</h3>
+<div class="note">
+<p><b>The founder should never have to learn anything.</b> Every decision follows from one rule: the founder opens the link and finds what they need in one or two taps, without scrolling through data meant for the assistant.</p>
+<ol>
+  <li><b>Two taps to anything.</b> The top of the page has one line of guidance and a box that always shows the trip in progress and the next trip, with a link. Tap it, and you are in that trip's brief. This box updates itself.</li>
+  <li><b>The brief reads in the order a traveller asks questions.</b> Where am I going, when, and where do I sleep (with a map link). Is there anything I must do (a visa problem appears in red). What is on today (shown while the trip is in progress). Who do I call. Then the plan for each day, in time order. The remaining details (flights, transport, booking numbers, documents) come last, in one short list.</li>
+  <li><b>Only what is needed is shown.</b> The default view, <b>Upcoming trips</b>, is a simple table with three columns: trip, dates and countdown, soonest first. The Calendar, Timeline and By status views show just as little. On each trip page, the raw fields the assistant types into are collapsed behind one "more properties" line, so the brief is the first thing on screen.</li>
+  <li><b>Always up to date, with no effort.</b> The assistant fills in plain fields only, with one line per itinerary event. A small script (GitHub Actions, every 15 minutes) rewrites the brief whenever a trip changes, and once a day during a trip to keep "Today" current. A static Notion template would go stale after the first edit. Lines typed in the wrong format are shown, never lost.</li>
+  <li><b>Made for a phone.</b> Briefs use only headings, bullets and coloured boxes, with no wide tables, so nothing needs sideways scrolling.</li>
+</ol>
+</div>
+
+<h3>Requirements, as written in the brief</h3>
 <table class="grid">
   <tr><th style="width:30%">Brief</th><th>How it's met</th></tr>
   <tr><td><span class="tick">✓</span> Single Trips database, one record per trip</td><td>One <b>Trips</b> database; every trip is one record.</td></tr>
-  <tr><td><span class="tick">✓</span> Trip name, who is traveling, date range</td><td><b>Trip</b>, <b>Traveler</b>, <b>Travel Dates</b> (range), plus Status, Destination, Purpose and a <b>Countdown</b> formula ("15 days to go", "✈️ Travelling now").</td></tr>
-  <tr><td><span class="tick">✓</span> Flights, hotels, addresses, confirmations, meetings, notes</td><td>Flights (with PNR), Hotel, Hotel Address, Hotel Confirmation, Ground Transport, Visa / Entry and Visa Notes, an <b>Itinerary</b> with one line per event (meetings, transfers, dinners), and Notes.</td></tr>
-  <tr><td><span class="tick">✓</span> Trip Brief: auto-generated, shareable</td><td>A <b>✈️ Trip Brief</b> in every trip page, written automatically from the trip's fields. It refreshes within 15 minutes of any edit (GitHub Actions + Notion API).</td></tr>
-  <tr><td><span class="tick">✓</span> Chronological timeline of key events</td><td><b>📅 Timeline</b>: every event sorted by date and time and grouped by day, with icons (✈️ 🚗 🏨 🤝 🍽️ 🎤) and confirmation numbers.</td></tr>
-  <tr><td><span class="tick">✓</span> Space to attach documents (tickets, visas)</td><td>The <b>Documents</b> files field (sample e-ticket, hotel confirmation and insurance PDFs attached), listed in the brief, plus a <b>📂 Extra files &amp; notes</b> area that's never overwritten.</td></tr>
-  <tr><td><span class="tick">✓</span> Emergency / primary contact info</td><td>A red <b>🆘</b> box near the top of every brief: primary contact (the EA), emergency contact and hotel.</td></tr>
-  <tr><td><span class="tick">✓</span> Timeline/calendar view of upcoming trips</td><td><b>Upcoming – Timeline</b> (hides Done trips) and <b>Calendar</b>.</td></tr>
+  <tr><td><span class="tick">✓</span> Trip name, who is traveling, date range</td><td><b>Trip</b>, <b>Traveler</b>, <b>Travel Dates</b> (range), plus Status, Destination, Purpose and a <b>Countdown</b> ("15 days to go", "Travelling now").</td></tr>
+  <tr><td><span class="tick">✓</span> Flights, hotels, addresses, confirmations, meetings, notes</td><td>Flights (with booking codes), Hotel, Hotel Address, Hotel Confirmation, Ground Transport, Visa / Entry and Visa Notes, an <b>Itinerary</b> with one line per event (meetings, transfers, dinners), and Notes.</td></tr>
+  <tr><td><span class="tick">✓</span> Trip Brief: auto-generated, shareable</td><td>A <b>Trip Brief</b> at the top of every trip page, written automatically from the trip's fields and refreshed within 15 minutes of any edit. Shareable through the published link.</td></tr>
+  <tr><td><span class="tick">✓</span> Chronological timeline of key events</td><td><b>Day by day</b>: every event sorted by date and time and grouped by day, with its confirmation number. While travelling, a <b>Today</b> box shows the current day first.</td></tr>
+  <tr><td><span class="tick">✓</span> Space to attach documents (tickets, visas)</td><td>The <b>Documents</b> field (sample e-ticket, hotel confirmation and insurance PDFs attached), listed in the brief, plus an <b>Extra files &amp; notes</b> area that is never overwritten.</td></tr>
+  <tr><td><span class="tick">✓</span> Emergency / primary contact info</td><td>A red box near the top of every brief: primary contact (the EA), emergency contact and hotel.</td></tr>
+  <tr><td><span class="tick">✓</span> Timeline/calendar view of upcoming trips</td><td><b>Upcoming trips</b> (the default), <b>Calendar</b> and <b>Timeline</b>; Done trips are hidden from Upcoming and Timeline.</td></tr>
   <tr><td><span class="tick">✓</span> Overview grouped by status</td><td>A <b>By status</b> board with columns Planned / In-Progress / Done.</td></tr>
   <tr><td><span class="tick">✓</span> Share to web, titled "Executive Travel Planner – {Your Name}"</td><td>Published, view-only: "Executive Travel Planner – Benjamin Kariuki".</td></tr>
 </table>
 
+<h3>How to check it in 3 minutes</h3>
+<ol>
+  <li>Open the Notion link. The yellow box at the top shows the trip in progress (<i>London – Investor Roadshow</i>) and the next trip.</li>
+  <li>Tap <i>London – Investor Roadshow</i>. The brief opens: where and where you sleep, Today, who to call, then each day.</li>
+  <li>Go back and switch between <b>Upcoming trips</b>, <b>Calendar</b>, <b>Timeline</b>, <b>By status</b> and <b>All trips</b>.</li>
+  <li>Open the link on a phone: the brief reads top to bottom with no sideways scrolling.</li>
+</ol>
+
 TASK2_SCREENSHOTS
 
-<h3>Design choices (the optional note)</h3>
+<h3>Testing</h3>
 <ul>
-  <li><b>One database, structured fields.</b> The EA fills in plain fields and never formats anything. The itinerary is one line per event (<code>2026-11-20 21:30 | Flight | BA178 JFK → LHR | PNR ABC123</code>), which is quick to type and easy to sort.</li>
-  <li><b>A generated brief instead of a static template.</b> A Notion template fills a page once and goes stale. Here the brief is rebuilt from the fields whenever the trip changes, so the founder never sees an outdated plan. Lines in the wrong format appear in a ⚠️ box rather than being lost.</li>
-  <li><b>Founder-first layout.</b> Where and when come first, then who to call, then the day-by-day plan, then the hotel with a Google Maps link, transport, visa status and documents. Only headings, bullets and callouts are used (no wide tables), so it reads well on a phone.</li>
-  <li><b>Status that drives the views.</b> Planned → In-Progress → Done moves cards on the board. The timeline hides finished trips, and the countdown shows what's next.</li>
-  <li><b>Tested.</b>
-    <ul>
-      <li>4 unit tests.</li>
-      <li>Live build: 23 trips with 23 complete briefs, each checked for timeline, contacts, stay, visa and documents; 0 schedule conflicts.</li>
-      <li>Editing one trip rebuilds only its brief.</li>
-      <li>EA notes survive rebuilds.</li>
-    </ul>
-  </li>
+  <li>6 offline unit tests: itinerary sorting, brief order and contents, the Today and visa boxes, the refresh rules, and the "Travelling now / Next trip" box. They run before every refresh.</li>
+  <li>Live build: 23 trips with 23 complete briefs and 0 schedule conflicts. Editing one trip rebuilds only its brief, and notes under <i>Extra files &amp; notes</i> survive a rebuild.</li>
 </ul>
 
 </body>

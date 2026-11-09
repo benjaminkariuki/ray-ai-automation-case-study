@@ -39,10 +39,11 @@ if run_now:
 else:
     html = html.replace('<a href="RUN_NOW_URL">RUN_NOW_URL_TEXT</a>', '<span style="color:#b00">PENDING: Run now page</span>')
 
-shots = [("notion-overview.png", "The planner page: a short guide for the EA and the founder, then the Trips database "
-                                 "(Upcoming – Timeline view)."),
+shots = [("notion-overview.png", "The planner page: one line of guidance, the automatic Travelling now / Next trip box, "
+                                 "then the trips (Upcoming trips, the default view)."),
          ("notion-board.png", "The By status view: Planned / In-Progress / Done."),
-         ("notion-brief.png", "A Trip Brief, generated automatically: summary, 🆘 contacts and the day-by-day timeline.")]
+         ("notion-brief.png", "A Trip Brief, generated automatically: where, when and where to sleep; Today; who to call; "
+                              "then each day.")]
 parts = []
 for file, caption in shots:
     if (IMAGES / file).exists():
@@ -51,8 +52,8 @@ for file, caption in shots:
                      f'<div class="cap">{caption}</div>')
 if (IMAGES / "notion-brief-mobile.png").exists():
     parts.append('<div class="two"><div><img class="phone" src="../task2-travel-planner/docs/images/notion-brief-mobile.png">'
-                 '</div><div class="cap" style="padding-top:20px">The same Trip Brief on a phone (390 px wide): '
-                 'headings, bullets and callouts only, with no wide tables, so nothing needs side-scrolling.</div></div>')
+                 '</div><div class="cap" style="padding-top:20px">The same Trip Brief on a phone: '
+                 'headings, bullets and coloured boxes only, so nothing needs sideways scrolling.</div></div>')
 html = html.replace("TASK2_SCREENSHOTS", "\n".join(parts))
 TMP.write_text(html, encoding="utf-8")
 

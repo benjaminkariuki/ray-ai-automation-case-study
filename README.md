@@ -31,7 +31,7 @@ A Python pipeline, run automatically every day on GitHub Actions. It finds remot
 | **Notion page (public)** | https://billowy-target-f39.notion.site/Executive-Travel-Planner-Benjamin-Kariuki-412d73ee564d807d82e8f40be8b6009c |
 | **README** | [task2-travel-planner/README.md](task2-travel-planner/README.md) |
 
-A Notion workspace: one Trips database (23 sample trips, Europe and USA), timeline, calendar and status views, and an auto-generated, mobile-friendly Trip Brief inside every trip.
+A Notion workspace built so the founder needs no instructions: one Trips database (23 sample trips, Europe and USA), a self-updating *Travelling now / Next trip* box, simple list, calendar, timeline and status views, and an auto-generated, mobile-friendly Trip Brief inside every trip.
 
 ---
 

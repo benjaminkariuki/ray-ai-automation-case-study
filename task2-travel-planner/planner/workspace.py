@@ -1,4 +1,6 @@
 """Builds the whole Notion workspace under one page: guide, Trips database, views and sample trips."""
+from datetime import datetime, timezone
+
 from .notion import text
 
 STATUS_OPTIONS = [
@@ -45,27 +47,100 @@ PROPERTIES = {
     "Brief Updated": {"type": "date", "date": {}},
 }
 
+HOME_ICON = "📍"  # marks the auto-updated "Travelling now / Next trip" box on the main page
+
+# Which fields each view shows: only what is needed to pick a trip. Everything else is in the brief.
+VIEW_FIELDS = {
+    "Upcoming trips": ["Travel Dates", "Countdown"],
+    "Calendar": [],
+    "Timeline": ["Countdown"],
+    "By status": ["Travel Dates", "Countdown"],
+    "All trips": ["Status", "Travel Dates", "Countdown", "Destination", "Traveler", "Purpose", "Visa / Entry"],
+}
+
+
 def guide_blocks():
-    """Short guide at the top of the planner page (who does what)."""
-    def b(*segs):
-        return {"type": "bulleted_list_item", "bulleted_list_item": {"rich_text": [s for seg in segs for s in seg]}}
+    """Top of the planner page: one line on how to use it, then the auto-updated 'now / next' box."""
     return [
         {"type": "callout", "callout": {"icon": {"type": "emoji", "emoji": "🧳"}, "color": "blue_background",
-         "rich_text": text("One place for every trip. ", bold=True) + text(
-             "Open any trip to see its Trip Brief — a day-by-day timeline, hotel, transport, visa status, "
-             "documents and emergency contacts, readable on a phone.")}},
-        {"type": "heading_3", "heading_3": {"rich_text": text("For the Executive Assistant")}},
-        b(text("Add a trip: ", bold=True), text("click New in the trips table, fill in the fields "
-          "(dates, traveler, flights, hotel, contacts) and attach tickets/visas in Documents.")),
-        b(text("Itinerary: ", bold=True), text(ITINERARY_HELP + "  — e.g. 2026-11-20 21:30 | Flight | "
-          "BA178 New York (JFK) → London (LHR) | PNR ABC123")),
-        b(text("Trip Brief: ", bold=True), text("built automatically inside the trip page within ~15 minutes of any "
-          "change. Tick “Rebuild Brief” to force a refresh. Notes below “📂 Extra files & notes” are never overwritten.")),
-        b(text("Status: ", bold=True), text("Planned → In-Progress → Done (drag cards on the Board view).")),
-        {"type": "heading_3", "heading_3": {"rich_text": text("For the founder")}},
-        b(text("Upcoming trips are on the Timeline and Calendar views. Tap a trip to open its brief — the red box "
-               "at the top has who to call.")),
-        {"type": "divider", "divider": {}},
+         "rich_text": text("Tap any trip to open its Trip Brief: ", bold=True) + text(
+             "where and when, who to call, and the plan for each day.")}},
+        {"type": "callout", "callout": {"icon": {"type": "emoji", "emoji": HOME_ICON}, "color": "yellow_background",
+         "rich_text": text("Your next trip appears here automatically.")}},
+    ]
+
+
+def home_text(pages, now):
+    """Rich text for the 'now / next' box: the trip in progress (if any) and the next planned trip."""
+    from .brief import fmt_day, prop
+
+    def start(pg):
+        return ((prop(pg, "Travel Dates") or {}).get("start") or "")[:10]
+
+    def link(pg):
+        return [{"type": "mention", "mention": {"type": "page", "page": {"id": pg["id"]}}}]
+
+    today = now.date().isoformat()
+    current = sorted((pg for pg in pages if prop(pg, "Status") == "In-Progress"), key=start)
+    upcoming = sorted((pg for pg in pages if prop(pg, "Status") == "Planned" and start(pg) >= today), key=start)
+    out = []
+    for pg in current[:1]:
+        end = ((prop(pg, "Travel Dates") or {}).get("end") or start(pg))[:10]
+        out += text("Travelling now: ", bold=True) + link(pg) + text(
+            f"  ·  until {fmt_day(datetime.fromisoformat(end))}\n")
+    for pg in upcoming[:1]:
+        out += text("Next trip: ", bold=True) + link(pg) + text(
+            f"  ·  {fmt_day(datetime.fromisoformat(start(pg)))}  ·  {prop(pg, 'Countdown')}")
+    return out or text("No upcoming trips.")
+
+
+def _signature(rich):
+    return [((r.get("mention") or {}).get("page", {}).get("id", "").replace("-", ""),
+             (r.get("text") or {}).get("content", "")) for r in rich]
+
+
+def update_home(notion, database_id, pages, now=None):
+    """Refresh the 'now / next' box on the main page (only writes when it changed)."""
+    now = now or datetime.now(timezone.utc)
+    page_id = notion.call("GET", f"/databases/{database_id}")["parent"].get("page_id")
+    box = next((b for b in notion.children(page_id) if b["type"] == "callout"
+                and (b["callout"].get("icon") or {}).get("emoji") == HOME_ICON), None)
+    if not box:
+        return False
+    new = home_text(pages, now)
+    if _signature(box["callout"]["rich_text"]) == _signature(new):
+        return False
+    notion.call("PATCH", f"/blocks/{box['id']}", {"callout": {"rich_text": new}})
+    return True
+
+
+def create_views(notion, database_id, data_source_id):
+    """Create the views in the order they are needed (the first one opens by default)."""
+    ds = notion.call("GET", f"/data_sources/{data_source_id}")
+    pid = {name: p["id"] for name, p in ds["properties"].items()}
+
+    def fields(name):
+        shown = VIEW_FIELDS[name]
+        return [{"property_id": pid[n], "visible": True} for n in shown] + \
+               [{"property_id": i, "visible": False} for n, i in pid.items() if n not in shown and n != "Trip"]
+
+    def view(name, vtype, configuration, **extra):
+        return notion.call("POST", "/views", {"data_source_id": data_source_id, "database_id": database_id,
+                                              "name": name, "type": vtype, "configuration": {
+                                                  "type": vtype, "properties": fields(name), **configuration},
+                                              **extra})
+    not_done = {"property": "Status", "status": {"does_not_equal": "Done"}}
+    by_date = [{"property": "Travel Dates", "direction": "ascending"}]
+    return [
+        view("Upcoming trips", "table", {"wrap_cells": False}, filter=not_done, sorts=by_date),
+        view("Calendar", "calendar", {"date_property_id": pid["Travel Dates"], "view_range": "month"}),
+        view("Timeline", "timeline", {"date_property_id": pid["Travel Dates"], "show_table": False},
+             filter=not_done, sorts=by_date),
+        view("By status", "board",
+             {"group_by": {"type": "status", "property_id": pid["Status"], "group_by": "option",
+                           "sort": {"type": "manual"}, "hide_empty_groups": False}}, sorts=by_date),
+        view("All trips", "table", {"wrap_cells": False},
+             sorts=[{"property": "Travel Dates", "direction": "descending"}]),
     ]
 
 
@@ -79,34 +154,8 @@ def create_workspace(notion, page_id):
         "initial_data_source": {"properties": PROPERTIES},
     })
     data_source_id = db["data_sources"][0]["id"]
-    ds = notion.call("GET", f"/data_sources/{data_source_id}")
-    pid = {name: p["id"] for name, p in ds["properties"].items()}
     default_views = notion.call("GET", "/views", params={"database_id": db["id"]}).get("results", [])
-
-    def view(name, vtype, configuration, **extra):
-        return notion.call("POST", "/views", {"data_source_id": data_source_id, "database_id": db["id"],
-                                              "name": name, "type": vtype,
-                                              "configuration": {"type": vtype, **configuration}, **extra})
-
-    views = [
-        view("Upcoming – Timeline", "timeline",
-             {"date_property_id": pid["Travel Dates"], "show_table": True},
-             filter={"property": "Status", "status": {"does_not_equal": "Done"}},
-             sorts=[{"property": "Travel Dates", "direction": "ascending"}]),
-        view("By status", "board",
-             {"group_by": {"type": "status", "property_id": pid["Status"], "group_by": "option",
-                           "sort": {"type": "manual"}, "hide_empty_groups": False}}),
-        view("Calendar", "calendar", {"date_property_id": pid["Travel Dates"], "view_range": "month"}),
-        view("All trips", "table", {"wrap_cells": False},
-             sorts=[{"property": "Travel Dates", "direction": "descending"}]),
-    ]
+    views = create_views(notion, db["id"], data_source_id)
     for v in default_views:  # remove the blank default table view Notion creates
         notion.call("DELETE", f"/views/{v['id']}")
-    notion.append(page_id, [
-        {"type": "toggle", "toggle": {"rich_text": text("How the Trip Brief is generated"), "children": [
-            {"type": "paragraph", "paragraph": {"rich_text": text(
-                "A small script (GitHub Actions, every 15 minutes) reads each trip and rewrites its "
-                "“✈️ Trip Brief” section from the fields above: a summary, emergency contacts, the itinerary sorted "
-                "by date and time, hotel with a map link, transport, visa status and documents. "
-                "Source: github.com/benjaminkariuki/ray-ai-automation-case-study (task2-travel-planner).")}}]}}])
     return {"database_id": db["id"], "data_source_id": data_source_id, "views": [v["id"] for v in views]}

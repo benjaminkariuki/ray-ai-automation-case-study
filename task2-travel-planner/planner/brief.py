@@ -95,8 +95,23 @@ def labelled(label, value, link=None):
     return text(f"{label}: ", bold=True) + text(value or "—", link=link)
 
 
+def maps_link(address):
+    return f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(address)}" if address else None
+
+
+def event_line(ev):
+    seg = text(f"{ev['when'].strftime('%H:%M') if ev['has_time'] else 'All day'}  ", bold=True)
+    seg += text(f"{icon_for(ev['kind'])} {ev['kind']} — {ev['details']}")
+    if ev["confirmation"]:
+        seg += text(f"  ·  {ev['confirmation']}", color="gray")
+    return seg
+
+
 def build_brief(page, now=None):
-    """Return the list of blocks that make up the brief for one trip page."""
+    """Return the list of blocks that make up the brief for one trip page.
+
+    Order follows what the founder needs first: where/when/where I sleep -> anything to act on ->
+    today's plan (while travelling) -> who to call -> day by day -> the remaining details."""
     now = now or datetime.now(timezone.utc)
     dates = prop(page, "Travel Dates") or {}
     start, end = dates.get("start"), dates.get("end")
@@ -109,24 +124,39 @@ def build_brief(page, now=None):
     events, unparsed = parse_itinerary(prop(page, "Itinerary"))
     status = prop(page, "Status") or "Planned"
     status_color = {"Planned": "blue_background", "In-Progress": "yellow_background", "Done": "green_background"}
+    hotel, address = prop(page, "Hotel"), prop(page, "Hotel Address")
+    visa = prop(page, "Visa / Entry")
 
-    blocks = [
-        callout("🧭", status_color.get(status, "gray_background"),
-                text(f"{prop(page, 'Destination') or 'Destination TBC'}\n", bold=True)
-                + text(f"{date_txt}\n")
-                + text(f"Traveler: {prop(page, 'Traveler') or '—'}   ·   Purpose: {prop(page, 'Purpose') or '—'}\n")
-                + text(f"Status: {status}   ·   Visa / entry: {prop(page, 'Visa / Entry') or '—'}")),
-    ]
+    # 1. At a glance: where, when, where I sleep
+    glance = text(f"{prop(page, 'Destination') or 'Destination TBC'}\n", bold=True) + text(f"{date_txt}\n")
+    if hotel or address:
+        glance += text("Hotel: ", bold=True) + text(hotel or "—")
+        glance += (text("  ·  ") + text(address, link=maps_link(address)) if address else []) + text("\n")
+    glance += text(f"{prop(page, 'Traveler') or '—'}  ·  {prop(page, 'Purpose') or '—'}  ·  {status}")
+    blocks = [callout("🧭", status_color.get(status, "gray_background"), glance)]
 
-    # Contacts first: what the founder needs in a hurry
+    # 2. Anything the founder must act on
+    if visa in ("Pending", "Action needed"):
+        blocks.append(callout("⚠️", "red_background" if visa == "Action needed" else "yellow_background",
+                              text(f"Visa / entry: {visa}. ", bold=True) + text(prop(page, "Visa Notes") or "")))
+
+    # 3. Today's plan, while travelling
+    if status == "In-Progress":
+        today = [ev for ev in events if ev["when"].date() == now.date()]
+        rows = text("Nothing scheduled today.", color="gray")
+        if today:
+            rows = sum(([*event_line(ev), *text("\n")] for ev in today), [])[:-1]
+        blocks.append(callout("📍", "yellow_background", text(f"Today, {fmt_day(now)}\n", bold=True) + rows))
+
+    # 4. Who to call
     contacts = [labelled("Primary contact", prop(page, "Primary Contact")),
                 labelled("Emergency contact", prop(page, "Emergency Contact"))]
     if prop(page, "Hotel Phone"):
-        contacts.append(labelled("Hotel", f"{prop(page, 'Hotel')} · {prop(page, 'Hotel Phone')}"))
+        contacts.append(labelled("Hotel", f"{hotel} · {prop(page, 'Hotel Phone')}"))
     blocks.append(callout("🆘", "red_background", sum(([*c, *text("\n")] for c in contacts[:-1]), []) + contacts[-1]))
 
-    # Chronological timeline, grouped by day
-    blocks.append(heading(2, "📅 Timeline"))
+    # 5. Day by day
+    blocks.append(heading(2, "📅 Day by day"))
     if not events:
         blocks.append(para(text("No itinerary yet — add lines to the Itinerary property, e.g. "
                                 "2026-11-20 21:30 | Flight | BA178 New York (JFK) → London (LHR) | PNR ABC123", color="gray")))
@@ -135,43 +165,27 @@ def build_brief(page, now=None):
         if ev["when"].date() != current_day:
             current_day = ev["when"].date()
             blocks.append(heading(3, fmt_day(ev["when"])))
-        seg = text(f"{ev['when'].strftime('%H:%M') if ev['has_time'] else 'All day'}  ", bold=True)
-        seg += text(f"{icon_for(ev['kind'])} {ev['kind']} — {ev['details']}")
-        if ev["confirmation"]:
-            seg += text(f"  ·  {ev['confirmation']}", color="gray")
-        blocks.append(bullet(seg))
+        blocks.append(bullet(event_line(ev)))
     if unparsed:
         blocks.append(callout("⚠️", "yellow_background",
                               text("Itinerary lines not in the expected format (shown as written):\n" + "\n".join(unparsed))))
 
-    # Stay & logistics
-    blocks.append(heading(2, "🏨 Stay & getting around"))
-    address = prop(page, "Hotel Address")
-    maps = f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(address)}" if address else None
-    blocks += [bullet(labelled("Hotel", prop(page, "Hotel"))),
-               bullet(labelled("Address", address, link=maps)),
-               bullet(labelled("Booking", prop(page, "Hotel Confirmation"))),
-               bullet(labelled("Flights", prop(page, "Flights"))),
-               bullet(labelled("Ground transport", prop(page, "Ground Transport")))]
-
-    blocks.append(heading(2, "🛂 Visa & entry"))
-    blocks.append(bullet(labelled(prop(page, "Visa / Entry") or "Status", prop(page, "Visa Notes"))))
-
-    blocks.append(heading(2, "📎 Documents"))
+    # 6. The remaining details, in one short list
+    blocks.append(heading(2, "🧳 Travel details"))
+    blocks += [bullet(labelled("Flights", prop(page, "Flights"))),
+               bullet(labelled("Ground transport", prop(page, "Ground Transport"))),
+               bullet(labelled("Hotel booking", prop(page, "Hotel Confirmation"))),
+               bullet(labelled(f"Visa / entry ({visa or 'status not set'})", prop(page, "Visa Notes")))]
     files = prop(page, "Documents") or []
     if files:
-        blocks += [bullet(text(f"📄 {name}")) for name in files]
+        blocks.append(bullet(labelled("Documents", ", ".join(files))))
         blocks.append(para(text("Open them from the Documents field at the top of this page.", color="gray")))
     else:
-        blocks.append(para(text("No documents attached yet — add tickets and visas in the Documents field at the top.",
-                                color="gray")))
-
+        blocks.append(bullet(labelled("Documents", "none attached yet")))
     if prop(page, "Notes"):
-        blocks.append(heading(2, "📝 Notes"))
-        blocks.append(para(text(prop(page, "Notes"))))
+        blocks.append(bullet(labelled("Notes", prop(page, "Notes"))))
 
-    blocks.append(para(text(f"Brief generated automatically {now.strftime('%d %b %Y, %H:%M')} UTC from the trip details.",
-                            color="gray")))
+    blocks.append(para(text(f"Updated automatically {now.strftime('%d %b %Y, %H:%M')} UTC.", color="gray")))
     blocks.append({"type": "divider", "divider": {}})
     return blocks
 
@@ -204,8 +218,9 @@ def write_brief(notion, page, now=None):
         "Rebuild Brief": {"checkbox": False}}})
 
 
-def needs_refresh(page):
-    """A brief is rebuilt when: never built, 'Rebuild Brief' ticked, or the trip was edited after the last build."""
+def needs_refresh(page, now=None):
+    """A brief is rebuilt when: never built, 'Rebuild Brief' ticked, the trip was edited after the last build,
+    or the trip is In-Progress and its brief is from an earlier day (keeps the "Today" box current)."""
     if prop(page, "Rebuild Brief"):
         return True
     updated = (prop(page, "Brief Updated") or {}).get("start")
@@ -215,4 +230,7 @@ def needs_refresh(page):
     built = datetime.fromisoformat(updated.replace("Z", "+00:00"))
     if built.tzinfo is None:
         built = built.replace(tzinfo=timezone.utc)
+    now = now or datetime.now(timezone.utc)
+    if prop(page, "Status") == "In-Progress" and built.date() < now.date():
+        return True
     return edited > built + timedelta(minutes=2)  # our own write also bumps last_edited_time

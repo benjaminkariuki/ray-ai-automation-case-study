@@ -14,7 +14,7 @@ from pathlib import Path
 from .brief import needs_refresh, prop, write_brief
 from .notion import Notion
 from .sample_data import all_trips, page_properties
-from .workspace import create_workspace
+from .workspace import create_views, create_workspace, update_home
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -35,7 +35,7 @@ def page_id_from(value):
     return m.group(1)
 
 
-def refresh_briefs(notion, data_source_id, force_all=False):
+def refresh_briefs(notion, data_source_id, force_all=False, database_id=None):
     pages = notion.query(data_source_id)
     done = 0
     for page in pages:
@@ -44,6 +44,12 @@ def refresh_briefs(notion, data_source_id, force_all=False):
             done += 1
             print(f"Brief updated: {prop(page, 'Trip')}")
     print(f"{done} of {len(pages)} trip briefs refreshed.")
+    if database_id:
+        try:  # the main page's "Travelling now / Next trip" box; never let it stop the briefs
+            if update_home(notion, database_id, notion.query(data_source_id) if done else pages):
+                print("Main page 'Travelling now / Next trip' box updated.")
+        except Exception as e:
+            print(f"WARNING: could not update the main page box: {e}")
     return done
 
 
@@ -77,12 +83,13 @@ def main():
                                                "icon": {"type": "emoji", "emoji": "🧳"},
                                                "properties": page_properties(trip)})
                 print(f"Added trip: {trip['Trip']}")
-        refresh_briefs(notion, ids["data_source_id"], force_all=True)
+        refresh_briefs(notion, ids["data_source_id"], force_all=True, database_id=ids["database_id"])
         (ROOT / "workspace.json").write_text(json.dumps(ids, indent=2), encoding="utf-8")
         print("Saved ids to workspace.json. Set NOTION_DATA_SOURCE_ID =", ids["data_source_id"])
     else:
-        ds = os.environ.get("NOTION_DATA_SOURCE_ID") or json.loads((ROOT / "workspace.json").read_text())["data_source_id"]
-        refresh_briefs(notion, ds, force_all=args.all)
+        saved = json.loads((ROOT / "workspace.json").read_text())
+        ds = os.environ.get("NOTION_DATA_SOURCE_ID") or saved["data_source_id"]
+        refresh_briefs(notion, ds, force_all=args.all, database_id=saved.get("database_id"))
 
 
 if __name__ == "__main__":

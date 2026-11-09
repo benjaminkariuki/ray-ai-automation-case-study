@@ -2,17 +2,18 @@
 from datetime import datetime, timezone
 
 from planner.brief import build_brief, icon_for, needs_refresh, parse_itinerary
+from planner.workspace import home_text
 
 
 def plain(segments):
-    return "".join(s["text"]["content"] for s in segments or [])
+    return "".join(s.get("text", {}).get("content", "@link") for s in segments or [])
 
 
 def rt(value):
     return {"type": "rich_text", "rich_text": [{"plain_text": value}]}
 
 
-def page(**overrides):
+def page(pid="p1", **overrides):
     props = {
         "Trip": {"type": "title", "title": [{"plain_text": "London"}]},
         "Status": {"type": "status", "status": {"name": "Planned"}},
@@ -20,13 +21,21 @@ def page(**overrides):
         "Destination": rt("London, UK"), "Traveler": rt("Alex"), "Purpose": {"type": "select", "select": None},
         "Itinerary": rt("2026-11-09 11:00 | Meeting | Northzone | Priya\n2026-11-08 23:35 | Flight | KQ100 | PNR X\n"
                         "bad line\n2026-11-09 | Free | Rest day"),
-        "Hotel Address": rt("199 High Holborn, London"), "Hotel Phone": {"type": "phone_number", "phone_number": None},
+        "Hotel": rt("The Hoxton"), "Hotel Address": rt("199 High Holborn, London"),
+        "Hotel Phone": {"type": "phone_number", "phone_number": None},
         "Documents": {"type": "files", "files": [{"name": "eticket.pdf"}]},
         "Rebuild Brief": {"type": "checkbox", "checkbox": False},
         "Brief Updated": {"type": "date", "date": None},
     }
     props.update(overrides)
-    return {"id": "p1", "properties": props, "last_edited_time": "2026-11-09T10:00:00.000Z"}
+    return {"id": pid, "properties": props, "last_edited_time": "2026-11-09T10:00:00.000Z"}
+
+
+def texts_of(blocks):
+    return [plain(b[b["type"]].get("rich_text")) for b in blocks if b["type"] != "divider"]
+
+
+NOW = datetime(2026, 11, 9, 12, tzinfo=timezone.utc)
 
 
 def test_itinerary_is_sorted_and_bad_lines_are_kept():
@@ -35,25 +44,57 @@ def test_itinerary_is_sorted_and_bad_lines_are_kept():
     assert unparsed == ["bad line"]
 
 
-def test_brief_contains_timeline_contacts_documents_and_map_link():
-    blocks = build_brief(page(), now=datetime(2026, 11, 9, tzinfo=timezone.utc))
-    texts = [plain(b[b["type"]].get("rich_text")) for b in blocks if b["type"] != "divider"]
+def test_brief_puts_essentials_first_and_keeps_every_detail():
+    blocks = build_brief(page(), now=NOW)
+    texts = texts_of(blocks)
     joined = "\n".join(texts)
-    assert "Sun 8 Nov 2026 → Thu 12 Nov 2026  (4 nights)" in joined
+    # first box: where, when, where I sleep (with a map link)
+    assert "London, UK" in texts[0] and "Sun 8 Nov 2026 → Thu 12 Nov 2026  (4 nights)" in texts[0]
+    assert "The Hoxton" in texts[0]
+    links = [s["text"]["link"]["url"] for s in blocks[0]["callout"]["rich_text"] if s["text"].get("link")]
+    assert links and "google.com/maps" in links[0]
+    # contacts come before the day-by-day plan, which is sorted
+    assert texts.index("📅 Day by day") > next(i for i, t in enumerate(texts) if "Emergency contact" in t)
     assert texts.index("Sun 8 Nov 2026") < texts.index("Mon 9 Nov 2026")
-    assert "Emergency contact" in joined and "📄 eticket.pdf" in joined and "bad line" in joined
-    maps = [s for b in blocks if b["type"] == "bulleted_list_item" for s in b["bulleted_list_item"]["rich_text"]
-            if s["text"].get("link")]
-    assert maps and "google.com/maps" in maps[0]["text"]["link"]["url"]
+    assert "Documents: eticket.pdf" in joined and "bad line" in joined
+    assert "Today," not in joined  # only while travelling
+
+
+def test_today_box_and_visa_warning():
+    blocks = build_brief(page(**{"Status": {"type": "status", "status": {"name": "In-Progress"}},
+                                 "Visa / Entry": {"type": "select", "select": {"name": "Action needed"}},
+                                 "Visa Notes": rt("Renew passport")}), now=NOW)
+    texts = texts_of(blocks)
+    assert texts[1].startswith("Visa / entry: Action needed") and "Renew passport" in texts[1]
+    assert blocks[1]["callout"]["color"] == "red_background"
+    assert texts[2].startswith("Today, Mon 9 Nov 2026") and "Northzone" in texts[2] and "KQ100" not in texts[2]
 
 
 def test_needs_refresh_rules():
-    assert needs_refresh(page())  # never built
+    assert needs_refresh(page(), now=NOW)  # never built
     built = {"type": "date", "date": {"start": "2026-11-09T09:59:30+00:00"}}
-    assert not needs_refresh(page(**{"Brief Updated": built}))  # our own write, within tolerance
+    assert not needs_refresh(page(**{"Brief Updated": built}), now=NOW)  # our own write, within tolerance
     old = {"type": "date", "date": {"start": "2026-11-09T09:00:00+00:00"}}
-    assert needs_refresh(page(**{"Brief Updated": old}))  # edited after the last build
-    assert needs_refresh(page(**{"Brief Updated": built, "Rebuild Brief": {"type": "checkbox", "checkbox": True}}))
+    assert needs_refresh(page(**{"Brief Updated": old}), now=NOW)  # edited after the last build
+    assert needs_refresh(page(**{"Brief Updated": built, "Rebuild Brief": {"type": "checkbox", "checkbox": True}}),
+                         now=NOW)
+    travelling = {"Brief Updated": built, "Status": {"type": "status", "status": {"name": "In-Progress"}}}
+    assert not needs_refresh(page(**travelling), now=NOW)  # same day
+    assert needs_refresh(page(**travelling), now=datetime(2026, 11, 10, 6, tzinfo=timezone.utc))  # new day
+
+
+def test_home_box_shows_current_and_next_trip():
+    def trip(pid, status, start, end):
+        return page(pid, **{"Status": {"type": "status", "status": {"name": status}},
+                            "Travel Dates": {"type": "date", "date": {"start": start, "end": end}},
+                            "Countdown": {"type": "formula", "formula": {"type": "string", "string": "5 days to go"}}})
+    pages = [trip("done", "Done", "2026-10-01", "2026-10-03"), trip("later", "Planned", "2026-12-01", "2026-12-03"),
+             trip("soon", "Planned", "2026-11-14", "2026-11-16"), trip("now", "In-Progress", "2026-11-08", "2026-11-12")]
+    rich = home_text(pages, NOW)
+    ids = [r["mention"]["page"]["id"] for r in rich if r["type"] == "mention"]
+    assert ids == ["now", "soon"]
+    assert "until Thu 12 Nov 2026" in plain(rich) and "Sat 14 Nov 2026" in plain(rich)
+    assert plain(home_text([], NOW)) == "No upcoming trips."
 
 
 def test_icons():
