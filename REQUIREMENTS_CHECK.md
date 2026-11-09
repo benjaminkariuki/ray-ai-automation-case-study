@@ -6,7 +6,7 @@ Status: ✅ met, tested live on 8–9 November 2026.
 **Links:**
 - Repository: https://github.com/benjaminkariuki/ray-ai-automation-case-study
 - Google Sheet: https://docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI
-- Notion: see the [Task 2 README](task2-travel-planner/README.md) or the submission PDF
+- Notion (public): https://billowy-target-f39.notion.site/Executive-Travel-Planner-Benjamin-Kariuki-412d73ee564d807d82e8f40be8b6009c
 
 ---
 

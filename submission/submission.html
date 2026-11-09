@@ -23,7 +23,7 @@
   table.grid td { border-bottom: 1px solid var(--line); padding: 4.5px 7px; vertical-align: top; }
   table.grid tr:nth-child(even) td { background: #fafbfd; }
   .tick { color: var(--ok); font-weight: 700; }
-  ul { margin: 0 0 8px 18px; padding: 0; } li { margin-bottom: 3px; }
+  ul { margin: 0 0 6px 18px; padding: 0; } li { margin-bottom: 2px; }
   .shot { width: 100%; border: 1px solid var(--line); border-radius: 6px; margin: 4px 0 2px; }
   .cap { color: var(--muted); font-size: 8.5pt; margin-bottom: 10px; }
   .two { display: flex; gap: 12px; align-items: flex-start; }
@@ -38,6 +38,8 @@
   h2, h3 { break-after: avoid; }
   tr, .shot, .stats, .flow, .box, li, .two { break-inside: avoid; }
   .muted { color: var(--muted); }
+  .crop-ov { height: 370px; object-fit: cover; object-position: top center; }
+  .crop { height: 205px; object-fit: cover; object-position: top left; }
 </style>
 </head>
 <body>
@@ -93,7 +95,6 @@
   <tr><td><span class="tick">✓</span> README: install, run, filters and prompt, troubleshooting, sales rep guide</td><td>All covered, plus a 5-minute evaluator guide. A short guide is also built into the Sheet.</td></tr>
 </table>
 
-<div class="page-break"></div>
 <h3>Deliverables</h3>
 <table class="grid">
   <tr><th style="width:30%">Deliverable</th><th>Where</th></tr>
@@ -130,7 +131,7 @@
     </ul>
   </li>
 </ul>
-<img class="shot" src="../task1-job-outreach/docs/images/sheet-leads.png" alt="Leads tab">
+<img class="shot crop" src="../task1-job-outreach/docs/images/sheet-leads.png" alt="Leads tab">
 <div class="cap">The Leads tab: the six required columns first, then the AI-written message, language requirements, source, prompt used, AI model and a Status dropdown for the sales rep.</div>
 
 <h3>How to verify Task 1 in 5 minutes</h3>
@@ -140,7 +141,7 @@
   <li>In the repo, open <code>task1-job-outreach/sample-output/latest/</code> for the newest run's console log, JSON and CSV.</li>
   <li>Optional: run <code>python task1-job-outreach/scripts/verify_sheet.py</code>; expect 12/12 PASS.</li>
 </ol>
-<p class="muted"><b>Process note:</b> the first version was an n8n workflow on a self-hosted Azure server. It worked, and its testing produced most of the fixes above. I moved it to Python on GitHub Actions so nothing depends on a server or cloud credits staying alive during the evaluation. Every run's logs are recorded.</p>
+<p class="muted"><b>Process note:</b> I first built this in n8n on a self-hosted server. It worked, and its testing drove the fixes above. I then moved it to Python on GitHub Actions so nothing depends on a server staying alive during the evaluation.</p>
 
 <div class="page-break"></div>
 <h2>Task 2 – Executive Travel Planner (Notion)</h2>

@@ -6,7 +6,7 @@ A Notion workspace where an Executive Assistant logs every trip in **one databas
 
 | | |
 |---|---|
-| **Notion workspace (public link)** | NOTION_PUBLIC_URL |
+| **Notion workspace (public link)** | https://billowy-target-f39.notion.site/Executive-Travel-Planner-Benjamin-Kariuki-412d73ee564d807d82e8f40be8b6009c |
 | **Builder + brief generator (Python)** | [planner/](planner/) |
 | **Brief refresh schedule** | [.github/workflows/trip-briefs.yml](../.github/workflows/trip-briefs.yml) (every 15 minutes) |
 
