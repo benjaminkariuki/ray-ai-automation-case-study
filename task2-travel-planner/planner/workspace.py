@@ -43,6 +43,7 @@ PROPERTIES = {
     "Primary Contact": {"type": "rich_text", "rich_text": {}},
     "Emergency Contact": {"type": "rich_text", "rich_text": {}},
     "Notes": {"type": "rich_text", "rich_text": {}},
+    "Brief Link": {"type": "url", "url": {}},
     "Rebuild Brief": {"type": "checkbox", "checkbox": {}},
     "Brief Updated": {"type": "date", "date": {}},
 }
@@ -50,12 +51,14 @@ PROPERTIES = {
 HOME_ICON = "📍"  # marks the auto-updated "Travelling now / Next trip" box on the main page
 
 # Which fields each view shows: only what is needed to pick a trip. Everything else is in the brief.
+# "Brief" is a link that opens the trip scrolled straight to its Trip Brief.
+BRIEF_FORMULA = 'if(empty(prop("Brief Link")), "Being prepared…", link("Open the Trip Brief ↓", prop("Brief Link")))'
 VIEW_FIELDS = {
-    "Upcoming trips": ["Travel Dates", "Countdown"],
+    "Upcoming trips": ["Brief", "Travel Dates", "Countdown"],
     "Calendar": [],
     "Timeline": ["Countdown"],
-    "By status": ["Travel Dates", "Countdown"],
-    "All trips": ["Status", "Travel Dates", "Countdown", "Destination", "Traveler", "Purpose", "Visa / Entry"],
+    "By status": ["Brief", "Travel Dates", "Countdown"],
+    "All trips": ["Brief", "Status", "Travel Dates", "Countdown", "Destination", "Traveler", "Purpose", "Visa / Entry"],
 }
 
 
@@ -77,8 +80,8 @@ def home_text(pages, now):
     def start(pg):
         return ((prop(pg, "Travel Dates") or {}).get("start") or "")[:10]
 
-    def link(pg):
-        return [{"type": "mention", "mention": {"type": "page", "page": {"id": pg["id"]}}}]
+    def link(pg):  # opens the trip scrolled straight to its brief
+        return text(prop(pg, "Trip"), bold=True, link=prop(pg, "Brief Link") or pg.get("public_url") or pg.get("url"))
 
     today = now.date().isoformat()
     current = sorted((pg for pg in pages if prop(pg, "Status") == "In-Progress"), key=start)
@@ -95,8 +98,8 @@ def home_text(pages, now):
 
 
 def _signature(rich):
-    return [((r.get("mention") or {}).get("page", {}).get("id", "").replace("-", ""),
-             (r.get("text") or {}).get("content", "")) for r in rich]
+    return [((r.get("text") or {}).get("content", ""), ((r.get("text") or {}).get("link") or {}).get("url"))
+            for r in rich]
 
 
 def update_home(notion, database_id, pages, now=None):
@@ -154,6 +157,8 @@ def create_workspace(notion, page_id):
         "initial_data_source": {"properties": PROPERTIES},
     })
     data_source_id = db["data_sources"][0]["id"]
+    notion.call("PATCH", f"/data_sources/{data_source_id}",
+                {"properties": {"Brief": {"formula": {"expression": BRIEF_FORMULA}}}})
     default_views = notion.call("GET", "/views", params={"database_id": db["id"]}).get("results", [])
     views = create_views(notion, db["id"], data_source_id)
     for v in default_views:  # remove the blank default table view Notion creates

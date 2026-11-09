@@ -36,9 +36,9 @@ A Notion workspace where an Executive Assistant logs every trip in **one databas
 ### The rule: zero learning curve for the founder
 The founder opens one link and finds what they need in one or two taps, without reading instructions or scrolling through data meant for the assistant.
 
-1. **Two taps to anything.** The page starts with one line ("Tap any trip to open its Trip Brief") and a box that always shows **Travelling now** and **Next trip** as links. The box updates itself.
+1. **Two taps to anything.** The page starts with one line ("Tap any trip to open its Trip Brief") and a box that always shows **Travelling now** and **Next trip**. Every trip link (in that box and the **Brief** column, "Open the Trip Brief ↓") opens the trip **scrolled straight to its brief**, skipping the assistant's raw fields. The box updates itself.
 2. **The brief answers questions in the order a traveller asks them.** Where am I going, when, and where do I sleep (with a Google Maps link)? Is there anything I must do? (A visa problem shows in red.) What's on today? (Only while travelling.) Who do I call? Then the plan for each day. The remaining details (flights, transport, booking numbers, documents) are in one short list at the end.
-3. **Only what's needed is shown.** The default view, **Upcoming trips**, is a simple table with three columns: trip, dates and countdown, soonest first. The other views show just as little. On a trip page, the raw fields the assistant types into are collapsed behind one *more properties* line, so the brief is the first thing on screen.
+3. **Only what's needed is shown.** The default view, **Upcoming trips**, is a simple table: trip, an *Open the Trip Brief* link, dates and countdown, soonest first. The other views show just as little. The raw fields the assistant types into stay on the trip page (that's where the assistant edits them), but the founder's links jump past them to the brief.
 4. **Always current, with no effort.** The assistant only fills in fields. The brief is rewritten automatically whenever the trip changes, and once a day during a trip so that **Today** stays current.
 5. **Made for a phone.** Headings, bullets and coloured boxes only, with no wide tables.
 
@@ -59,7 +59,7 @@ The assistant's instructions are in this README (section 3) rather than on the p
 | Visa Notes, Notes | Text | Details |
 | **Documents** | Files | Tickets, boarding passes, visas |
 | Primary Contact, Emergency Contact | Text | Who to call |
-| Rebuild Brief, Brief Updated | Checkbox / date | Brief automation (see below) |
+| Rebuild Brief, Brief Updated, Brief Link, Brief | Checkbox / date / URL / formula | Brief automation (see below). **Brief** shows "Open the Trip Brief ↓", a link that opens the trip scrolled straight to its brief |
 
 ### The Trip Brief, generated automatically
 Every 15 minutes, a GitHub Action runs `python -m planner briefs`. It rebuilds the brief of any trip that is **new**, was **edited** since its last brief, has **Rebuild Brief** ticked, or is **In-Progress** and was last built on an earlier day. The same run updates the **Travelling now / Next trip** box on the main page. Each brief contains, in this order:
@@ -79,7 +79,7 @@ Each view shows only the fields needed to pick a trip; everything else is in the
 
 | View | Type | Shows |
 |---|---|---|
-| Upcoming trips (default) | Table | Planned and In-Progress trips, soonest first: trip, dates, countdown |
+| Upcoming trips (default) | Table | Planned and In-Progress trips, soonest first: trip, *Open the Trip Brief* link, dates, countdown |
 | Calendar | Calendar (month) | Trips across their date range |
 | Timeline | Timeline | Planned and In-Progress trips on a timeline |
 | By status | Board | Columns for Planned / In-Progress / Done; drag cards to change status |
@@ -101,7 +101,7 @@ Each view shows only the fields needed to pick a trip; everything else is in the
 4. Move the trip through **Planned → In-Progress → Done** on the board.
 
 ## 4. For the founder
-Open the link on any device. Tap the trip in the yellow box at the top (or any trip in the list). Its brief opens with where you're going and where you sleep, then today's plan, who to call and each day.
+Open the link on any device. Tap the trip in the yellow box at the top, or **Open the Trip Brief** next to any trip in the list. Its brief opens with where you're going and where you sleep, then today's plan, who to call and each day.
 
 ---
 

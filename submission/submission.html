@@ -166,9 +166,9 @@
 <div class="note">
 <p><b>The founder should never have to learn anything.</b> Every decision follows from one rule: the founder opens the link and finds what they need in one or two taps, without scrolling through data meant for the assistant.</p>
 <ol>
-  <li><b>Two taps to anything.</b> The top of the page has one line of guidance and a box that always shows the trip in progress and the next trip, with a link. Tap it, and you are in that trip's brief. This box updates itself.</li>
+  <li><b>Two taps to anything.</b> The top of the page has one line of guidance and a box that always shows the trip in progress and the next trip. Every trip link there, and the <b>Open the Trip Brief</b> link next to each trip, opens the trip already scrolled to its brief. The box updates itself.</li>
   <li><b>The brief reads in the order a traveller asks questions.</b> Where am I going, when, and where do I sleep (with a map link). Is there anything I must do (a visa problem appears in red). What is on today (shown while the trip is in progress). Who do I call. Then the plan for each day, in time order. The remaining details (flights, transport, booking numbers, documents) come last, in one short list.</li>
-  <li><b>Only what is needed is shown.</b> The default view, <b>Upcoming trips</b>, is a simple table with three columns: trip, dates and countdown, soonest first. The Calendar, Timeline and By status views show just as little. On each trip page, the raw fields the assistant types into are collapsed behind one "more properties" line, so the brief is the first thing on screen.</li>
+  <li><b>Only what is needed is shown.</b> The default view, <b>Upcoming trips</b>, is a simple table: trip, an <i>Open the Trip Brief</i> link, dates and countdown, soonest first. The Calendar, Timeline and By status views show just as little. The raw fields the assistant types into stay on the trip page for editing, but the founder's links skip past them.</li>
   <li><b>Always up to date, with no effort.</b> The assistant fills in plain fields only, with one line per itinerary event. A small script (GitHub Actions, every 15 minutes) rewrites the brief whenever a trip changes, and once a day during a trip to keep "Today" current. A static Notion template would go stale after the first edit. Lines typed in the wrong format are shown, never lost.</li>
   <li><b>Made for a phone.</b> Briefs use only headings, bullets and coloured boxes, with no wide tables, so nothing needs sideways scrolling.</li>
 </ol>
@@ -192,7 +192,7 @@
 <h3>How to check it in 3 minutes</h3>
 <ol>
   <li>Open the Notion link. The yellow box at the top shows the trip in progress (<i>London – Investor Roadshow</i>) and the next trip.</li>
-  <li>Tap <i>London – Investor Roadshow</i>. The brief opens: where and where you sleep, Today, who to call, then each day.</li>
+  <li>Tap <i>London – Investor Roadshow</i> in that box (or <i>Open the Trip Brief</i> in the list). The trip opens already scrolled to its brief: where and where you sleep, Today, who to call, then each day.</li>
   <li>Go back and switch between <b>Upcoming trips</b>, <b>Calendar</b>, <b>Timeline</b>, <b>By status</b> and <b>All trips</b>.</li>
   <li>Open the link on a phone: the brief reads top to bottom with no sideways scrolling.</li>
 </ol>
@@ -201,7 +201,7 @@ TASK2_SCREENSHOTS
 
 <h3>Testing</h3>
 <ul>
-  <li>6 offline unit tests: itinerary sorting, brief order and contents, the Today and visa boxes, the refresh rules, and the "Travelling now / Next trip" box. They run before every refresh.</li>
+  <li>6 offline unit tests: itinerary sorting, brief order and contents, the Today and visa boxes, the refresh rules, the "Travelling now / Next trip" box and its direct-to-brief links. They run before every refresh.</li>
   <li>Live build: 23 trips with 23 complete briefs and 0 schedule conflicts. Editing one trip rebuilds only its brief, and notes under <i>Extra files &amp; notes</i> survive a rebuild.</li>
 </ul>
 

@@ -87,12 +87,13 @@ def test_home_box_shows_current_and_next_trip():
     def trip(pid, status, start, end):
         return page(pid, **{"Status": {"type": "status", "status": {"name": status}},
                             "Travel Dates": {"type": "date", "date": {"start": start, "end": end}},
+                            "Brief Link": {"type": "url", "url": f"https://x.notion.site/{pid}#brief"},
                             "Countdown": {"type": "formula", "formula": {"type": "string", "string": "5 days to go"}}})
     pages = [trip("done", "Done", "2026-10-01", "2026-10-03"), trip("later", "Planned", "2026-12-01", "2026-12-03"),
              trip("soon", "Planned", "2026-11-14", "2026-11-16"), trip("now", "In-Progress", "2026-11-08", "2026-11-12")]
     rich = home_text(pages, NOW)
-    ids = [r["mention"]["page"]["id"] for r in rich if r["type"] == "mention"]
-    assert ids == ["now", "soon"]
+    links = [r["text"]["link"]["url"] for r in rich if r["text"].get("link")]
+    assert links == ["https://x.notion.site/now#brief", "https://x.notion.site/soon#brief"]  # straight to the brief
     assert "until Thu 12 Nov 2026" in plain(rich) and "Sat 14 Nov 2026" in plain(rich)
     assert plain(home_text([], NOW)) == "No upcoming trips."
 

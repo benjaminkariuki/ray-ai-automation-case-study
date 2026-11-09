@@ -30,8 +30,8 @@ def prop(page, name):
         return (p[t] or {}).get("name", "")
     if t == "date":
         return p["date"] or {}
-    if t == "phone_number":
-        return p["phone_number"] or ""
+    if t in ("phone_number", "url"):
+        return p[t] or ""
     if t == "files":
         return [(f.get("name") or "file") for f in p["files"]]
     if t == "checkbox":
@@ -204,9 +204,9 @@ def write_brief(notion, page, now=None):
     kept = next((b for b in existing if _heading_text(b) == KEPT_HEADING), None)
     blocks = build_brief(page, now)
     if anchor is None:
-        notion.append(page_id, [heading(1, BRIEF_HEADING)] + blocks + [
+        anchor = notion.append(page_id, [heading(1, BRIEF_HEADING)] + blocks + [
             heading(2, KEPT_HEADING),
-            para(text("Drop extra files or notes here — this section is never overwritten.", color="gray"))])
+            para(text("Drop extra files or notes here — this section is never overwritten.", color="gray"))])[0]
     else:
         start = existing.index(anchor) + 1
         stop = existing.index(kept) if kept in existing else len(existing)
@@ -215,7 +215,14 @@ def write_brief(notion, page, now=None):
         notion.append(page_id, blocks, after=anchor["id"])
     notion.call("PATCH", f"/pages/{page_id}", {"properties": {
         "Brief Updated": {"date": {"start": (now or datetime.now(timezone.utc)).isoformat()}},
+        "Brief Link": {"url": brief_link(page, anchor["id"])},
         "Rebuild Brief": {"checkbox": False}}})
+
+
+def brief_link(page, anchor_id):
+    """Link that opens the trip page scrolled straight to its brief (skipping the fields above it).
+    Uses the published link when the page is shared to the web."""
+    return f"{page.get('public_url') or page['url']}#{anchor_id.replace('-', '')}"
 
 
 def needs_refresh(page, now=None):
