@@ -47,7 +47,8 @@ shots = [("notion-overview.png", "The planner page: one line of guidance, the au
 parts = []
 for file, caption in shots:
     if (IMAGES / file).exists():
-        cls = "shot crop-ov" if file == "notion-overview.png" else "shot"
+        cls = "shot " + {"notion-overview.png": "crop-ov", "notion-board.png": "crop-board",
+                         "notion-brief.png": "crop-brief"}[file]
         parts.append(f'<img class="{cls}" src="../task2-travel-planner/docs/images/{file}" alt="{file}">'
                      f'<div class="cap">{caption}</div>')
 if (IMAGES / "notion-brief-mobile.png").exists():

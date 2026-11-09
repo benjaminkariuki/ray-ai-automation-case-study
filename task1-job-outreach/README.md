@@ -205,7 +205,7 @@ That's it. It runs daily at about 06:07 UTC; if GitHub skips that slot, the next
 | Other schedulers | Any machine can run it with cron (`0 6 * * * cd /path/task1-job-outreach && python -m job_outreach`) or Windows Task Scheduler |
 
 ### The public "Run now" page (optional, complementary)
-The automatic daily schedule above is the default and needs no action. The Run now page is only an extra for running it **manually** on demand, for example to watch a run during an evaluation. GitHub only lets people with write access press **Run workflow**, so [run-now/](run-now/) holds a tiny **Cloudflare Worker** (free plan) that gives evaluators a button instead. It also runs a **backup daily trigger** at 07:40, 13:40 and 19:40 UTC that starts the run only if no daily run has succeeded that day.
+The automatic daily schedule above is the default and needs no action. The Run now page is only an extra for running it **manually** on demand, for example to watch a run during an evaluation. GitHub only lets people with write access press **Run workflow**, so [run-now/](run-now/) holds a tiny **Cloudflare Worker** (free plan) that gives evaluators a button instead. It also runs a **backup daily trigger** at 07:40, 13:40 and 19:40 UTC that starts the run only if no daily run has succeeded that day, and starts Task 2's Trip Brief refresh every 15 minutes.
 
 - It uses a **fine-grained GitHub token** limited to this repository with only **Actions: read and write**, so it can start and list runs, but can't read secrets or change code.
 - A **15-minute cooldown** and "one run at a time" stop anyone from spamming it; jobs already processed are skipped anyway.

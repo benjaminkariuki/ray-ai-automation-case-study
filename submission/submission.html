@@ -38,7 +38,9 @@
   h2, h3 { break-after: avoid; }
   tr, .shot, .stats, .flow, .box, li, .two { break-inside: avoid; }
   .muted { color: var(--muted); }
-  .crop-ov { height: 370px; object-fit: cover; object-position: top center; }
+  .crop-ov { height: 430px; object-fit: cover; object-position: top center; }
+  .crop-board { height: 300px; object-fit: cover; object-position: center bottom; }
+  .crop-brief { height: 470px; object-fit: cover; object-position: center 88%; }
   .crop { height: 205px; object-fit: cover; object-position: top left; }
   .note { border-left: 4px solid var(--accent); background: var(--soft); padding: 9px 14px; margin: 8px 0 12px; border-radius: 0 8px 8px 0; }
   .note ol { margin: 4px 0 2px 20px; padding: 0; } .note li { margin-bottom: 5px; }
@@ -169,7 +171,7 @@
   <li><b>Two taps to anything.</b> The top of the page has one line of guidance and a box that always shows the trip in progress and the next trip. Every trip link there, and the <b>Open the Trip Brief</b> link next to each trip, opens the trip already scrolled to its brief. The box updates itself.</li>
   <li><b>The brief reads in the order a traveller asks questions.</b> Where am I going, when, and where do I sleep (with a map link). Is there anything I must do (a visa problem appears in red). What is on today (shown while the trip is in progress). Who do I call. Then the plan for each day, in time order. The remaining details (flights, transport, booking numbers, documents) come last, in one short list.</li>
   <li><b>Only what is needed is shown.</b> The default view, <b>Upcoming trips</b>, is a simple table: trip, an <i>Open the Trip Brief</i> link, dates and countdown, soonest first. The Calendar, Timeline and By status views show just as little. The raw fields the assistant types into stay on the trip page for editing, but the founder's links skip past them.</li>
-  <li><b>Always up to date, with no effort.</b> The assistant fills in plain fields only, with one line per itinerary event. A small script (GitHub Actions, every 15 minutes) rewrites the brief whenever a trip changes, and once a day during a trip to keep "Today" current. A static Notion template would go stale after the first edit. Lines typed in the wrong format are shown, never lost.</li>
+  <li><b>Always up to date, with no effort.</b> The assistant fills in plain fields only, with one line per itinerary event. A small script (GitHub Actions, started every 15 minutes, with a Cloudflare trigger as backup) rewrites the brief whenever a trip changes, and once a day during a trip to keep "Today" current. A static Notion template would go stale after the first edit. Lines typed in the wrong format are shown, never lost.</li>
   <li><b>Made for a phone.</b> Briefs use only headings, bullets and coloured boxes, with no wide tables, so nothing needs sideways scrolling.</li>
 </ol>
 </div>
@@ -197,13 +199,15 @@
   <li>Open the link on a phone: the brief reads top to bottom with no sideways scrolling.</li>
 </ol>
 
-TASK2_SCREENSHOTS
-
 <h3>Testing</h3>
 <ul>
   <li>6 offline unit tests: itinerary sorting, brief order and contents, the Today and visa boxes, the refresh rules, the "Travelling now / Next trip" box and its direct-to-brief links. They run before every refresh.</li>
   <li>Live build: 23 trips with 23 complete briefs and 0 schedule conflicts. Editing one trip rebuilds only its brief, and notes under <i>Extra files &amp; notes</i> survive a rebuild.</li>
 </ul>
+
+TASK2_SCREENSHOTS
+
+
 
 </body>
 </html>

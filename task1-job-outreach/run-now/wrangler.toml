@@ -7,5 +7,6 @@ compatibility_date = "2025-09-01"
 workers_dev = true
 
 [triggers]
-# Backup for GitHub's scheduler (UTC). Each one only starts a run if no daily run has succeeded today.
-crons = ["40 7 * * *", "40 13 * * *", "40 19 * * *"]
+# Backup for GitHub's scheduler (UTC). The three daily ones start Task 1 only if no daily run has succeeded today.
+# "*/15" starts the Task 2 Trip Brief refresh (GitHub often skips its own 15-minute schedule).
+crons = ["40 7 * * *", "40 13 * * *", "40 19 * * *", "*/15 * * * *"]

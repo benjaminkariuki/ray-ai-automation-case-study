@@ -9,6 +9,8 @@
 
 const REPO = "benjaminkariuki/ray-ai-automation-case-study";
 const WORKFLOW = "job-outreach.yml";
+const BRIEFS_WORKFLOW = "trip-briefs.yml"; // Task 2 brief refresher
+const BRIEFS_CRON = "*/15 * * * *";
 const ACTIONS_URL = `https://github.com/${REPO}/actions/workflows/${WORKFLOW}`;
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI/edit";
 const REPO_URL = `https://github.com/${REPO}/tree/main/task1-job-outreach`;
@@ -149,6 +151,16 @@ export default {
 
   // Independent backup for GitHub's cron: start the daily run if none has succeeded today and none is running.
   async scheduled(event, env, ctx) {
+    // Task 2: GitHub's free scheduler often drops the 15-minute Trip Brief refresh, so start it from here too.
+    if (event.cron === BRIEFS_CRON) {
+      const r = await github(env, `/actions/workflows/${BRIEFS_WORKFLOW}/dispatches`, {
+        method: "POST",
+        body: JSON.stringify({ ref: "main" }),
+      });
+      if (r.status !== 204) throw new Error(`GitHub API returned ${r.status}`);
+      return;
+    }
+    // Task 1: backup daily trigger, only if no daily run has succeeded (or is running) today.
     const today = new Date().toISOString().slice(0, 10);
     const runs = await recentRuns(env, 30);
     const todays = runs.filter((r) => r.created_at.startsWith(today) && r.display_title.startsWith("Daily run"));

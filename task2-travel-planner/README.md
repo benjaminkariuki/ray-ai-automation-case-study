@@ -62,7 +62,7 @@ The assistant's instructions are in this README (section 3) rather than on the p
 | Rebuild Brief, Brief Updated, Brief Link, Brief | Checkbox / date / URL / formula | Brief automation (see below). **Brief** shows "Open the Trip Brief ↓", a link that opens the trip scrolled straight to its brief |
 
 ### The Trip Brief, generated automatically
-Every 15 minutes, a GitHub Action runs `python -m planner briefs`. It rebuilds the brief of any trip that is **new**, was **edited** since its last brief, has **Rebuild Brief** ticked, or is **In-Progress** and was last built on an earlier day. The same run updates the **Travelling now / Next trip** box on the main page. Each brief contains, in this order:
+Every 15 minutes, a GitHub Action runs `python -m planner briefs`. GitHub's free scheduler often skips such frequent slots, so the same Cloudflare Worker that backs up Task 1 ([run-now/](../task1-job-outreach/run-now/)) also starts this refresh every 15 minutes. It rebuilds the brief of any trip that is **new**, was **edited** since its last brief, has **Rebuild Brief** ticked, or is **In-Progress** and was last built on an earlier day. The same run updates the **Travelling now / Next trip** box on the main page. Each brief contains, in this order:
 1. **At a glance:** destination, dates and nights, hotel with a **Google Maps link**, traveler, purpose and status. The box is coloured by status.
 2. **Action needed** (only when the visa is *Pending* or *Action needed*): a yellow or red box with the visa notes.
 3. **Today** (only while the trip is in progress): today's events.
