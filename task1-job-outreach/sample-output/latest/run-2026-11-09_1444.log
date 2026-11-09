@@ -1,0 +1,10 @@
+14:44:39  Run started (Manual (GitHub Actions)) at 2026-11-09 14:44 UTC
+14:44:40  Settings loaded. Prompt: v1_warm | max jobs: 15
+14:44:58  Fetched 346 postings {'Himalayas': 240, 'RemoteOK': 99, 'Jobicy': 7}
+14:44:59  Keyword filter: 82 matched, 79 already processed, 3 new -> AI (0 deferred to next run)
+14:45:25  [1/3] Executive Assistant @ The Bloom Africa -> rejected: Fully remote role requiring US business hours for an executive assistant supporting multip
+14:46:51  [2/3] Remote Executive Assistant - Business Operations & BD Suppor @ FreedUp -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+14:47:41  [3/3] Executive Assistant - LATAM @ Elevenlabs -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+14:47:43  Google Sheet updated: Leads, Rejected, Run Log.
+14:47:43  Run summary: {"Run Time (UTC)": "2026-11-09 14:44", "Trigger": "Manual (GitHub Actions)", "Fetched": 346, "Passed Keyword Filter": 82, "Already Seen": 79, "Checked by LLM": 3, "Leads Added": 2, "Rejected": 1, "LLM Errors": 0, "Backup AI Used": 0}
+14:47:43  Output: output/run-2026-11-09_1444.json (+ .log and CSV files)
