@@ -101,14 +101,16 @@ HOW_TO = [
     ["- Job data comes from Himalayas, RemoteOK and Jobicy; always apply via the original Job Posting URL."],
     [""],
     ["COLOURS"],
-    ["- Rows alternate in colour so long rows are easy to follow. The outreach message column is highlighted in yellow."],
+    ["- Rows alternate in colour so long rows are easy to follow. The outreach message column is highlighted in yellow; "
+     "Source and Prompt Used are colour-coded, and each prompt in the Prompts tab has its own colour."],
     ["- Rejected: green = check passed, red = the check that failed (Remote/English/Relevant = No, or Agency = Yes)."],
     ["- Run Log: green trigger = scheduled daily run; red = AI errors; amber = the backup AI (Cloudflare) was used."],
     ["- Settings: the yellow Value column is the part you edit."],
     [""],
     ["FOR EVALUATORS"],
-    ["- Anyone with the link can edit, so feel free to test: e.g. set Settings > outreach_prompt to v2_direct, then use "
-     "the public Run now link (see the README) and watch the new leads arrive."],
+    ["- The automation runs by itself every day (the default). Optionally, you can start an extra run manually from the "
+     "public Run now page (see the README), e.g. after setting Settings > outreach_prompt to v2_direct."],
+    ["- Anyone with the link can edit, so feel free to test settings and prompts."],
     ["- Header rows are protected with a warning. If a value is invalid, the next run uses the default and notes it in its log."],
 ]
 
@@ -297,19 +299,27 @@ def main():
         "fields": "userEnteredFormat(textFormat,backgroundColor,verticalAlignment,wrapStrategy)"}})
 
     # ---- Colours: alternating rows on every data tab, plus meaning-based highlights ----
-    req += banding_req(leads.id, len(LEADS_HEADERS), (0.13, 0.2, 0.33), (0.93, 0.96, 1.0))
-    req += banding_req(rejected.id, len(REJECTED_HEADERS), (0.45, 0.2, 0.2), (0.99, 0.95, 0.95))
-    req += banding_req(settings.id, 3, (0.55, 0.35, 0.05), (0.99, 0.97, 0.92))
-    req += banding_req(prompts.id, 4, (0.35, 0.2, 0.5), (0.97, 0.95, 1.0))
-    req += banding_req(runlog.id, len(RUNLOG_HEADERS), (0.15, 0.4, 0.2), (0.94, 0.98, 0.94))
+    req += banding_req(leads.id, len(LEADS_HEADERS), (0.13, 0.2, 0.33), (0.85, 0.91, 1.0))
+    req += banding_req(rejected.id, len(REJECTED_HEADERS), (0.45, 0.2, 0.2), (0.99, 0.89, 0.89))
+    req += banding_req(settings.id, 3, (0.55, 0.35, 0.05), (0.99, 0.93, 0.83))
+    req += banding_req(prompts.id, 4, (0.35, 0.2, 0.5), (0.95, 0.92, 1.0))
+    req += banding_req(runlog.id, len(RUNLOG_HEADERS), (0.15, 0.4, 0.2), (0.87, 0.95, 0.87))
     # Leads: outreach message column in two alternating yellows; prompt name coloured (status colours are above)
     msg = LEADS_HEADERS.index("LLM-Generated Outreach Message")
-    req.append(cf_formula(leads.id, msg, msg + 1, '=AND($A2<>"",ISEVEN(ROW()))', (1.0, 0.94, 0.72)))
-    req.append(cf_formula(leads.id, msg, msg + 1, '=AND($A2<>"",ISODD(ROW()))', (1.0, 0.98, 0.87)))
+    req.append(cf_formula(leads.id, msg, msg + 1, '=AND($A2<>"",ISEVEN(ROW()))', (1.0, 0.87, 0.55)))
+    req.append(cf_formula(leads.id, msg, msg + 1, '=AND($A2<>"",ISODD(ROW()))', (1.0, 0.96, 0.78)))
     pc = LEADS_HEADERS.index("Prompt Used")
     letter = col_letter(pc)
     req.append(cf_formula(leads.id, pc, pc + 1, f'=${letter}2="v1_warm"', (0.9, 0.85, 0.98)))
     req.append(cf_formula(leads.id, pc, pc + 1, f'=${letter}2="v2_direct"', (0.8, 0.95, 0.93)))
+    for ws, headers in ((leads, LEADS_HEADERS), (rejected, REJECTED_HEADERS)):
+        c = headers.index("Source")
+        letter = col_letter(c)
+        for source, fill in (("Himalayas", (0.8, 0.93, 0.93)), ("Jobicy", (1.0, 0.88, 0.75)), ("RemoteOK", (0.97, 0.84, 0.92))):
+            req.append(cf_formula(ws.id, c, c + 1, f'=${letter}2="{source}"', fill))
+    # Prompts: each prompt row in its own colour (outreach prompts match the Leads "Prompt Used" colours)
+    for name, fill in (("v1_warm", (0.9, 0.85, 0.98)), ("v2_direct", (0.8, 0.95, 0.93)), ("validation", (1.0, 0.9, 0.8))):
+        req.append(cf_formula(prompts.id, 0, 4, f'=$A2="{name}"', fill))
     # Rejected: each check green when passed, red when it is the reason for rejection
     for name, bad in (("Remote", "No"), ("English", "No"), ("Relevant", "No"), ("Agency", "Yes")):
         c = REJECTED_HEADERS.index(name)
@@ -331,7 +341,8 @@ def main():
     # Settings: the editable Value column in yellow, names in bold; Prompts: names in bold
     req.append({"repeatCell": {"range": {"sheetId": settings.id, "startRowIndex": 1, "startColumnIndex": 0, "endColumnIndex": 1},
                 "cell": {"userEnteredFormat": {"textFormat": {"bold": True}}}, "fields": "userEnteredFormat.textFormat"}})
-    req.append(cf_formula(settings.id, 1, 2, '=$A2<>""', (1.0, 0.96, 0.7)))
+    req.append(cf_formula(settings.id, 1, 2, '=AND($A2<>"",ISEVEN(ROW()))', (1.0, 0.9, 0.55)))
+    req.append(cf_formula(settings.id, 1, 2, '=AND($A2<>"",ISODD(ROW()))', (1.0, 0.96, 0.75)))
     req.append({"repeatCell": {"range": {"sheetId": prompts.id, "startRowIndex": 1, "startColumnIndex": 0, "endColumnIndex": 2},
                 "cell": {"userEnteredFormat": {"textFormat": {"bold": True}}}, "fields": "userEnteredFormat.textFormat"}})
     # Header rows and the setting/prompt names: anyone can edit, but Google shows a warning first

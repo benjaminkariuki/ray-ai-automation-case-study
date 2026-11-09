@@ -6,7 +6,7 @@ Status: ✅ met, tested live on 8–9 November 2026.
 **Links:**
 - Repository: https://github.com/benjaminkariuki/ray-ai-automation-case-study
 - Google Sheet: https://docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI (anyone with the link can view and edit)
-- Task 1 – Run it now: https://ray-run-now.run-now.workers.dev (public page that starts a run)
+- Task 1 – Run it now (optional): https://ray-run-now.run-now.workers.dev: a complementary page for extra manual runs; the automatic daily schedule is the default
 - Notion (public): https://billowy-target-f39.notion.site/Executive-Travel-Planner-Benjamin-Kariuki-412d73ee564d807d82e8f40be8b6009c
 
 ---
@@ -27,7 +27,7 @@ Status: ✅ met, tested live on 8–9 November 2026.
 | 10 | "generate a genuinely personalized outreach message per posting" | Each message cites duties, tools or team details from that posting. The AI may only state facts about us from `sender_offer`. | `verify_sheet.py`: "39/39 messages reference the specific posting" and "Messages are clean" | ✅ |
 | 11 | "The prompt must be easily interchangeable so tone/wording can be tested without rebuilding the workflow" | Prompts live in the Sheet's **Prompts** tab. Changing **Settings → outreach_prompt** switches the prompt on the next run, with no code change. Each lead records **Prompt Used**. | Leads → *Prompt Used* shows `v1_warm` and `v2_direct` (tested live) | ✅ |
 | 12 | "Save to Google Sheets — with columns: Job Posting URL, Job Title, Company Name, Location, Job Description, LLM-Generated Outreach Message" | Exactly these 6 columns come first, in this order. Tracking columns follow. | `verify_sheet.py`: "Required columns, in order" | ✅ |
-| 13 | "schedule the process to run daily or weekly" | GitHub Actions runs **daily at about 06:07 UTC**. Because GitHub's free scheduler can skip a slot, backup slots every 3 hours and an independent Cloudflare trigger start it later that day if no daily run has succeeded; a failed run is retried 3 times. Editing the cron lines makes it weekly. Anyone can also start a run from the public **Run now** page. | [job-outreach.yml](.github/workflows/job-outreach.yml), [run-now/](task1-job-outreach/run-now/); Sheet → Run Log | ✅ |
+| 13 | "schedule the process to run daily or weekly" | GitHub Actions runs **daily at about 06:07 UTC**. Because GitHub's free scheduler can skip a slot, backup slots every 3 hours and an independent Cloudflare trigger start it later that day if no daily run has succeeded; a failed run is retried 3 times. Editing the cron lines makes it weekly. This automatic schedule is the default; as a complementary extra, anyone can start an additional run manually from the public **Run now** page. | [job-outreach.yml](.github/workflows/job-outreach.yml), [run-now/](task1-job-outreach/run-now/); Sheet → Run Log | ✅ |
 | 14 | "README/user guide covering install, how to run, how to adjust filters and the LLM prompt, basic troubleshooting, and how a sales rep uses the Sheet" | README sections 5, 5, 4, 4, 6 and 3 respectively, plus a 5-minute evaluator guide. | [task1-job-outreach/README.md](task1-job-outreach/README.md) | ✅ |
 | D1 | Deliverable: "Source code (scrape, validate, LLM, Sheets)" | `sources.py` / `filters.py`, `ai.py` + prompts, `ai.py`, and `sheet.py` + `setup_sheet.py` | [job_outreach/](task1-job-outreach/job_outreach/) | ✅ |
 | D2 | Deliverable: "sample data output (CSV/JSON or console)" | All three: CSV, JSON and the console `.log`, refreshed after every run | [sample-output/](task1-job-outreach/sample-output/) | ✅ |

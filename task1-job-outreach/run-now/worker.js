@@ -84,7 +84,7 @@ ${refresh ? `<meta http-equiv="refresh" content="${refresh}">` : ""}
   ol{padding-left:20px;margin:.4rem 0}.wrap{overflow-x:auto}.nw{white-space:nowrap}
 </style></head><body><main>
 <h1>RAY Task 1 – run the job-outreach automation</h1>
-<p class="mute">For evaluators: start the same GitHub Actions run that happens every day, without a GitHub account.</p>
+<p class="mute">The automation already runs <b>by itself every day</b> (about 06:07 UTC) – that is the default and needs no action. This page is an optional extra: it lets you start an additional run manually, for example to watch one during an evaluation, without a GitHub account.</p>
 ${notice ? `<div class="notice ${notice.kind}">${notice.html}</div>` : ""}
 ${error ? `<div class="notice bad">${esc(error)}</div>` : ""}
 <div class="card">
@@ -104,7 +104,7 @@ ${error ? `<div class="notice bad">${esc(error)}</div>` : ""}
   <p class="mute">Tip: anyone with the link can edit the Sheet. Set <b>Settings → outreach_prompt</b> to <code>v2_direct</code>
   before running to see the other prompt in action.</p>
 </div>
-<div class="card wrap"><strong>Latest runs</strong>${active ? ' <span class="mute">(this page refreshes every 20 s)</span>' : ""}
+<div class="card wrap"><strong>Latest runs</strong> <span class="mute">(“Daily run” = automatic; the others were started manually)</span>${active ? ' <span class="mute">(this page refreshes every 20 s)</span>' : ""}
   <table><thead><tr><th>Started</th><th>Run</th><th>Status</th><th></th></tr></thead><tbody>${rows ||
     '<tr><td colspan="4">No runs found.</td></tr>'}</tbody></table>
 </div>

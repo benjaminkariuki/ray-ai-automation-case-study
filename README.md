@@ -13,12 +13,12 @@ Requirement-by-requirement check of both tasks: [REQUIREMENTS_CHECK.md](REQUIREM
 | | |
 |---|---|
 | **Google Sheet (dashboard)** | https://docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI (anyone with the link can view and edit) |
-| **Run it now** | https://ray-run-now.run-now.workers.dev (public page, no GitHub account needed) |
+| **Run it now (optional)** | https://ray-run-now.run-now.workers.dev: a complementary page to start an extra run manually. The automation already runs by itself every day; that is the default. |
 | **Run history** | https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml |
 | **README** | [task1-job-outreach/README.md](task1-job-outreach/README.md) (start with section 1, *verify it in 5 minutes*) |
 | **Sample output** | [task1-job-outreach/sample-output/](task1-job-outreach/sample-output/) |
 
-A Python pipeline, run daily on GitHub Actions. It finds remote, English-speaking Executive and Admin Assistant jobs on three job boards (no LinkedIn), checks each one with AI, writes a personalised outreach email for each match, and fills a colour-coded Google Sheet that sales reps use as their dashboard.
+A Python pipeline, run automatically every day on GitHub Actions. It finds remote, English-speaking Executive and Admin Assistant jobs on three job boards (no LinkedIn), checks each one with AI, writes a personalised outreach email for each match, and fills a colour-coded Google Sheet that sales reps use as their dashboard.
 
 ---
 

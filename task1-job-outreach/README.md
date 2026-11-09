@@ -2,7 +2,7 @@
 
 [![Task 1 - EA Job Outreach](https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml/badge.svg)](https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml)
 
-A **Python pipeline, run every day by GitHub Actions**, does four things:
+A **Python pipeline, run automatically every day by GitHub Actions** (the default: nobody has to start it), does four things:
 
 1. Finds new Executive Assistant and Admin Assistant jobs on three job boards. LinkedIn is not used.
 2. Uses AI to check that each job is **remote, English-speaking and relevant**.
@@ -14,7 +14,7 @@ It runs on GitHub's servers, so there's no server of our own to keep alive.
 | | |
 |---|---|
 | **Google Sheet (dashboard)** | https://docs.google.com/spreadsheets/d/1GwAt8R3_O-h6ivZ_CT_8yD6GMIdybyf2-YgscTQ9hRI (anyone with the link can view and edit) |
-| **Run it now** | https://ray-run-now.run-now.workers.dev: a public page that starts a run, no GitHub account needed |
+| **Run it now (optional)** | https://ray-run-now.run-now.workers.dev: a complementary page to start an extra run manually, no GitHub account needed. The automatic daily schedule is the default and needs no action. |
 | **Run history** | https://github.com/benjaminkariuki/ray-ai-automation-case-study/actions/workflows/job-outreach.yml |
 | **Source code** | [job_outreach/](job_outreach/) |
 | **Schedule** | [.github/workflows/job-outreach.yml](../.github/workflows/job-outreach.yml) |
@@ -32,7 +32,7 @@ It runs on GitHub's servers, so there's no server of our own to keep alive.
 | 3 | **Personalised messages** | Compare 2–3 messages in **Leads** with their **Job Posting URL**. Each one cites duties or details from that specific posting. |
 | 4 | **Interchangeable prompt** | **Prompts** tab: two outreach prompts, `v1_warm` and `v2_direct`. The **Prompt Used** column in Leads shows both were used, switched from the Settings tab with no code change. |
 | 5 | **Scheduling** | Open the **Run history** link above: one *Daily run* per day (about 06:07 UTC, or a later backup slot if GitHub skipped it; see section 5). The Sheet's **Run Log** tab records every run; scheduled ones show a green **Schedule** trigger. The full GitHub logs need a free sign-in. |
-| 6 | **Run it yourself** | Open the **Run it now** page above and press the button. About 3–6 minutes later a new **Run Log** row appears with Trigger *Run now (public link)*, and any new leads are at the bottom of **Leads**. Anyone with the link can edit the Sheet, so you can first set **Settings → outreach_prompt** to `v2_direct` to see the other prompt in action. |
+| 6 | **Run it yourself (optional)** | The daily runs happen on their own; this is only an extra way to see a run happen now. Open the **Run it now** page above and press the button. About 3–6 minutes later a new **Run Log** row appears with Trigger *Run now (public link)*, and any new leads are at the bottom of **Leads**. Anyone with the link can edit the Sheet, so you can first set **Settings → outreach_prompt** to `v2_direct` to see the other prompt in action. |
 | 7 | **Console and sample output** | [sample-output/](sample-output/) has a CSV of each Sheet tab, and [latest/](sample-output/latest/) holds the newest run's console output (`.log`), its JSON (every scraped posting and AI decision) and CSV. No sign-in needed. |
 | 8 | **Automated check** | `python scripts/verify_sheet.py` checks the live Sheet against every requirement (13 checks). It needs no login or packages. It also runs automatically after every run. |
 
@@ -68,7 +68,7 @@ $ python scripts/verify_sheet.py
 ## 2. How it works
 
 ```
-GitHub Actions (daily ~06:07 UTC + backup slots, the public "Run now" page, or "Run workflow")
+GitHub Actions: automatic daily ~06:07 UTC + backup slots (default)  ·  optional manual: "Run now" page or "Run workflow"
   └─ python -m job_outreach                      (retried up to 3 times if it fails)
        1. Read Settings + Prompts + already-processed URLs from the Google Sheet (bad values → defaults)
        2. Fetch jobs: Himalayas (search) · RemoteOK (assistant tag) · Jobicy (Admin & Support)
@@ -118,7 +118,7 @@ OpenRouter (primary: Nemotron 3 Ultra → Gemma 4 as its own fallback)
 | Prompts | The AI instructions, as plain text |
 | Run Log | One row per run: trigger, fetched, filtered, checked, added, rejected, errors and backup use |
 
-**Colours:** rows alternate so long rows are easy to follow, and the outreach message column is yellow. In **Rejected**, each check is green when passed and red when it caused the rejection. In **Run Log**, scheduled runs are green, AI errors red and backup-AI use amber. In **Settings**, the yellow **Value** column is the part you edit.
+**Colours:** rows alternate so long rows are easy to follow, the outreach message column is yellow, and **Source** and **Prompt Used** are colour-coded (each prompt has the same colour in the **Prompts** tab). In **Rejected**, each check is green when passed and red when it caused the rejection. In **Run Log**, scheduled runs are green, AI errors red and backup-AI use amber. In **Settings**, the yellow **Value** column is the part you edit.
 
 > Don't delete rows in Leads or Rejected; the automation uses them to avoid duplicates. Use **Not a Fit** instead. Deleting a row deliberately makes the job get re-checked on the next run.
 
@@ -198,14 +198,14 @@ That's it. It runs daily at about 06:07 UTC; if GitHub skips that slot, the next
 
 | Task | How |
 |---|---|
-| Run now | **Actions → Task 1 - EA Job Outreach → Run workflow** (repo owner). Optional inputs: max jobs, dry run. Anyone else: the public **Run it now** page |
+| Run it manually (optional) | **Actions → Task 1 - EA Job Outreach → Run workflow** (repo owner). Optional inputs: max jobs, dry run. Anyone else: the public **Run it now** page. Not needed for the daily runs |
 | Change the schedule | Edit the `cron:` lines in the workflow file. For weekly on Mondays, end every line with `1` instead of `*` (e.g. `"7 6 * * 1"`), and do the same in `run-now/wrangler.toml` |
 | Pause | **Actions → the workflow → ••• → Disable workflow** |
 | History | The **Actions** tab (logs and summary for each run, signed in), the Sheet's **Run Log**, and `sample-output/latest/` |
 | Other schedulers | Any machine can run it with cron (`0 6 * * * cd /path/task1-job-outreach && python -m job_outreach`) or Windows Task Scheduler |
 
-### The public "Run now" page (optional)
-GitHub only lets people with write access press **Run workflow**, so [run-now/](run-now/) holds a tiny **Cloudflare Worker** (free plan) that gives evaluators a button instead. It also runs a **backup daily trigger** at 07:40, 13:40 and 19:40 UTC that starts the run only if no daily run has succeeded that day.
+### The public "Run now" page (optional, complementary)
+The automatic daily schedule above is the default and needs no action. The Run now page is only an extra for running it **manually** on demand, for example to watch a run during an evaluation. GitHub only lets people with write access press **Run workflow**, so [run-now/](run-now/) holds a tiny **Cloudflare Worker** (free plan) that gives evaluators a button instead. It also runs a **backup daily trigger** at 07:40, 13:40 and 19:40 UTC that starts the run only if no daily run has succeeded that day.
 
 - It uses a **fine-grained GitHub token** limited to this repository with only **Actions: read and write**, so it can start and list runs, but can't read secrets or change code.
 - A **15-minute cooldown** and "one run at a time" stop anyone from spamming it; jobs already processed are skipped anyway.
