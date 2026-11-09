@@ -1,7 +1,0 @@
-16:28:30  Run started (Run now (public link)) at 2026-11-09 16:28 UTC
-16:28:31  Settings loaded. Prompt: v1_warm | max jobs: 15
-16:28:45  Fetched 346 postings {'Himalayas': 240, 'RemoteOK': 99, 'Jobicy': 7}
-16:28:46  Keyword filter: 82 matched, 82 already processed, 0 new -> AI (0 deferred to next run)
-16:28:46  Google Sheet updated: Leads, Rejected, Run Log.
-16:28:46  Run summary: {"Run Time (UTC)": "2026-11-09 16:28", "Trigger": "Run now (public link)", "Fetched": 346, "Passed Keyword Filter": 82, "Already Seen": 82, "Checked by LLM": 0, "Leads Added": 0, "Rejected": 0, "LLM Errors": 0, "Backup AI Used": 0}
-16:28:46  Output: output/run-2026-11-09_1628.json (+ .log and CSV files)
