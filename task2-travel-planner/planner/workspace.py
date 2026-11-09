@@ -124,7 +124,8 @@ def create_views(notion, database_id, data_source_id):
 
     def fields(name):
         shown = VIEW_FIELDS[name]
-        return [{"property_id": pid[n], "visible": True} for n in shown] + \
+        return [{"property_id": pid["Trip"], "visible": True}] + \
+               [{"property_id": pid[n], "visible": True} for n in shown] + \
                [{"property_id": i, "visible": False} for n, i in pid.items() if n not in shown and n != "Trip"]
 
     def view(name, vtype, configuration, **extra):
