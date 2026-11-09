@@ -40,7 +40,7 @@ The founder opens one link and finds what they need in one or two taps, without 
 2. **The brief answers questions in the order a traveller asks them.** Where am I going, when, and where do I sleep (with a Google Maps link)? Is there anything I must do? (A visa problem shows in red.) What's on today? (Only while travelling.) Who do I call? Then the plan for each day. The remaining details (flights, transport, booking numbers, documents) are in one short list at the end.
 3. **Only what's needed is shown.** The default view, **Upcoming trips**, is a simple table: trip, an *Open the Trip Brief* link, dates and countdown, soonest first. The other views show just as little. The raw fields the assistant types into stay on the trip page (that's where the assistant edits them), but the founder's links jump past them to the brief.
 4. **Always current, with no effort.** The assistant only fills in fields. The brief is rewritten automatically whenever the trip changes, and once a day during a trip so that **Today** stays current.
-5. **Made for a phone.** Headings, bullets and coloured boxes only, with no wide tables.
+5. **Made for a phone, easy on the eyes.** Headings, bullets and coloured boxes only, with thin grey lines between sections and between days so the eye can jump to the part it needs. No wide tables.
 
 The assistant's instructions are in this README (section 3) rather than on the page, so the founder never sees them.
 
