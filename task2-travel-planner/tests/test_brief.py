@@ -58,6 +58,10 @@ def test_brief_puts_essentials_first_and_keeps_every_detail():
     assert texts.index("Sun 8 Nov 2026") < texts.index("Mon 9 Nov 2026")
     assert "Documents: eticket.pdf" in joined and "bad line" in joined
     assert "Today," not in joined  # only while travelling
+    # thin grey lines: before Day by day, between the 2 days, before Travel details, and at the end
+    kinds = [b["type"] for b in blocks]
+    assert kinds.count("divider") == 4
+    assert kinds[kinds.index("heading_2") - 1] == "divider"
 
 
 def test_today_box_and_visa_warning():

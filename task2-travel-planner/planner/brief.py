@@ -95,6 +95,9 @@ def labelled(label, value, link=None):
     return text(f"{label}: ", bold=True) + text(value or "—", link=link)
 
 
+DIVIDER = {"type": "divider", "divider": {}}  # Notion's thin grey line
+
+
 def maps_link(address):
     return f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote(address)}" if address else None
 
@@ -155,7 +158,8 @@ def build_brief(page, now=None):
         contacts.append(labelled("Hotel", f"{hotel} · {prop(page, 'Hotel Phone')}"))
     blocks.append(callout("🆘", "red_background", sum(([*c, *text("\n")] for c in contacts[:-1]), []) + contacts[-1]))
 
-    # 5. Day by day
+    # 5. Day by day (thin grey lines separate the sections and the days, so the eye can jump between them)
+    blocks.append(DIVIDER)
     blocks.append(heading(2, "📅 Day by day"))
     if not events:
         blocks.append(para(text("No itinerary yet — add lines to the Itinerary property, e.g. "
@@ -163,6 +167,8 @@ def build_brief(page, now=None):
     current_day = None
     for ev in events:
         if ev["when"].date() != current_day:
+            if current_day is not None:
+                blocks.append(DIVIDER)
             current_day = ev["when"].date()
             blocks.append(heading(3, fmt_day(ev["when"])))
         blocks.append(bullet(event_line(ev)))
@@ -171,6 +177,7 @@ def build_brief(page, now=None):
                               text("Itinerary lines not in the expected format (shown as written):\n" + "\n".join(unparsed))))
 
     # 6. The remaining details, in one short list
+    blocks.append(DIVIDER)
     blocks.append(heading(2, "🧳 Travel details"))
     blocks += [bullet(labelled("Flights", prop(page, "Flights"))),
                bullet(labelled("Ground transport", prop(page, "Ground Transport"))),
