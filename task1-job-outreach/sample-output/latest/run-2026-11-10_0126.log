@@ -1,0 +1,7 @@
+01:26:34  Run started (Schedule (GitHub Actions)) at 2026-11-10 01:26 UTC
+01:26:35  Settings loaded. Prompt: v1_warm | max jobs: 15
+01:26:51  Fetched 347 postings {'Himalayas': 240, 'RemoteOK': 99, 'Jobicy': 8}
+01:26:51  Keyword filter: 82 matched, 82 already processed, 0 new -> AI (0 deferred to next run)
+01:26:52  Google Sheet updated: Leads, Rejected, Run Log.
+01:26:52  Run summary: {"Run Time (UTC)": "2026-11-10 01:26", "Trigger": "Schedule (GitHub Actions)", "Fetched": 347, "Passed Keyword Filter": 82, "Already Seen": 82, "Checked by LLM": 0, "Leads Added": 0, "Rejected": 0, "LLM Errors": 0, "Backup AI Used": 0}
+01:26:52  Output: output/run-2026-11-10_0126.json (+ .log and CSV files)

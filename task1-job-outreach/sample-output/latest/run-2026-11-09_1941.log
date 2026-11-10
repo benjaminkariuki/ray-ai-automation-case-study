@@ -1,7 +1,0 @@
-19:41:01  Run started (Schedule (backup trigger)) at 2026-11-09 19:41 UTC
-19:41:02  Settings loaded. Prompt: v1_warm | max jobs: 15
-19:41:17  Fetched 345 postings {'Himalayas': 239, 'RemoteOK': 99, 'Jobicy': 7}
-19:41:18  Keyword filter: 81 matched, 81 already processed, 0 new -> AI (0 deferred to next run)
-19:41:18  Google Sheet updated: Leads, Rejected, Run Log.
-19:41:18  Run summary: {"Run Time (UTC)": "2026-11-09 19:41", "Trigger": "Schedule (backup trigger)", "Fetched": 345, "Passed Keyword Filter": 81, "Already Seen": 81, "Checked by LLM": 0, "Leads Added": 0, "Rejected": 0, "LLM Errors": 0, "Backup AI Used": 0}
-19:41:18  Output: output/run-2026-11-09_1941.json (+ .log and CSV files)
