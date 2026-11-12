@@ -1,0 +1,20 @@
+00:30:07  Run started (Schedule (GitHub Actions)) at 2026-11-12 00:30 UTC
+00:30:08  Settings loaded. Prompt: v1_warm | max jobs: 15
+00:30:27  Fetched 345 postings {'Himalayas': 240, 'RemoteOK': 99, 'Jobicy': 6}
+00:30:28  Keyword filter: 84 matched, 71 already processed, 13 new -> AI (0 deferred to next run)
+00:30:51  [1/13] SGS Administrative Assistant @ The Suddath Companies -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+00:31:20  [2/13] Executive Assistant (Virtual, US) @ SIRVA -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+00:31:43  [3/13] Executive Assistant - AI & Business Operations @ M365Consult -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+00:31:50  [4/13] Executive Assistant (U.S. Accounting Firm) @ VirtueStaff -> rejected: Fully remote role for a staffing agency placing an Executive Assistant with a U.S. account
+00:31:58  [5/13] Virtual Executive Assistant @ The Bloom Africa -> rejected: Fully remote executive assistant role from an agency placing assistants with clients, requ
+00:32:17  [6/13] Executive Administrative Assistant @ Wonder Works Construction -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+00:32:40  [7/13] Executive Assistant @ Offchain Labs -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+00:32:52  [8/13] Temporary Administrative Assistant II @ National University -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+00:33:27  [9/13] Executive Assistant (open to remote) @ Reinsurance Group of America -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+00:33:40  [10/13] Executive Assistant (012-1466) @ Hunt St -> rejected: Fully remote Executive Assistant role for an Australian client via staffing agency Hunt St
+00:33:48  [11/13] Executive Assistant + CRM & Lead Management Virtual Assistan @ Vitalis Outsourcing LLC -> rejected: The role is a fully remote executive assistant position posted by an outsourcing agency re
+00:34:12  [12/13] Executive Assistant to the CEO @ Smartland -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+00:34:18  [13/13] Executive Assistant - Strategic Support @ Delegate Solutions LLC -> rejected: Fully remote US-based executive assistant role at a virtual-assistant agency requiring Eng
+00:34:22  Google Sheet updated: Leads, Rejected, Run Log.
+00:34:22  Run summary: {"Run Time (UTC)": "2026-11-12 00:30", "Trigger": "Schedule (GitHub Actions)", "Fetched": 345, "Passed Keyword Filter": 84, "Already Seen": 71, "Checked by LLM": 13, "Leads Added": 8, "Rejected": 5, "LLM Errors": 0, "Backup AI Used": 0}
+00:34:22  Output: output/run-2026-11-12_0030.json (+ .log and CSV files)
