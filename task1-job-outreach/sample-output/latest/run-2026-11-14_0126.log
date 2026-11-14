@@ -1,0 +1,22 @@
+01:26:33  Run started (Schedule (GitHub Actions)) at 2026-11-14 01:26 UTC
+01:26:34  Settings loaded. Prompt: v1_warm | max jobs: 15
+01:26:49  Fetched 345 postings {'Himalayas': 240, 'RemoteOK': 99, 'Jobicy': 6}
+01:26:50  Keyword filter: 93 matched, 76 already processed, 15 new -> AI (2 deferred to next run)
+01:27:06  [1/15] Personal Assistant @ Remote VA -> rejected: The role is a fully remote Personal Assistant position at a virtual assistant agency requi
+01:27:24  [2/15] Executive Assistant (Quickbooks) @ Remote VA -> rejected: Fully remote Executive Assistant role requiring fluent English, posted by a virtual assist
+01:27:45  [3/15] Executive Assistant @ Manay CPA Inc. -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:28:58  [4/15] Administrative assistant @ Remote VA -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:29:18  [5/15] Admin Assistant @ Remote VA -> rejected: Fully remote role with EST hours, English-language posting for an administrative assistant
+01:29:27  [6/15] Fire Alarm Admin Assistant @ Remote VA -> rejected: The role is a remote administrative assistant position at a virtual assistant agency, post
+01:29:51  [7/15] Executive Assistant, Pulmovant @ Pulmovant -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:30:21  [8/15] Executive Assistant @ RapidSOS -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:31:21  [9/15] Executive Assistant Senior @ Universal Technical Institute -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:32:00  [10/15] Administrative Assistant @ Urban Strategies -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:33:12  [11/15] Executive Assistant - AI & Business Operations @ M365Consult -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:33:36  [12/15] Executive Assistant - AI & Business Operations @ M365Consult -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:34:16  [13/15] Bookkeeper & Admin Assistant (024-1482) @ Hunt St -> rejected: Role is primarily bookkeeping with admin support, not an executive/admin assistant; Hunt S
+01:34:22  [14/15] (SA & PH) Finance & Executive Assistant (Accounts, Payroll & @ The OE Agency -> rejected: Fully remote role for an agency placing a Finance & Executive Assistant with clients, requ
+01:34:44  [15/15] Remote Executive Assistants @ Big League Movers -> rejected: The posting is for a remote Executive Assistant role from a staffing agency (Ready Roles) 
+01:34:47  Google Sheet updated: Leads, Rejected, Run Log.
+01:34:47  Run summary: {"Run Time (UTC)": "2026-11-14 01:26", "Trigger": "Schedule (GitHub Actions)", "Fetched": 345, "Passed Keyword Filter": 93, "Already Seen": 76, "Checked by LLM": 15, "Leads Added": 8, "Rejected": 7, "LLM Errors": 0, "Backup AI Used": 0}
+01:34:47  Output: output/run-2026-11-14_0126.json (+ .log and CSV files)
