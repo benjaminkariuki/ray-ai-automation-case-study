@@ -1,0 +1,22 @@
+00:59:52  Run started (Schedule (GitHub Actions)) at 2026-11-15 00:59 UTC
+00:59:53  Settings loaded. Prompt: v1_warm | max jobs: 15
+01:00:43  Fetched 343 postings {'Himalayas': 240, 'RemoteOK': 99, 'Jobicy': 4}
+01:00:44  Keyword filter: 93 matched, 77 already processed, 15 new -> AI (1 deferred to next run)
+01:01:00  [1/15] Phone Customer Service/Personal Assistant @ Remote VA -> rejected: The posting is for a remote Personal Assistant role at a virtual assistant agency requirin
+01:01:41  [2/15] Admin Assistant (Property Management) @ Remote VA -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:01:56  [3/15] Male Executive Assistant @ Remote VA -> rejected: Remote Executive Assistant role from a virtual assistant agency, posted in English with no
+01:02:31  [4/15] Executive/personal assistant @ Remote VA -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:02:39  [5/15] Executive/Personal Assistant @ Remote VA -> rejected: Fully remote role for a VA agency placing an executive/personal assistant with a client, p
+01:02:51  [6/15] Real Estate Admin Assistant @ Remote VA -> rejected: Fully remote admin assistant role posted by a virtual assistant agency, written in English
+01:03:19  [7/15] Executive Assistant - Virtual Assistant @ Remote VA -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:03:29  [8/15] Executive Assistant @ Remote VA -> rejected: Remote VA is a virtual assistant agency hiring a remote Executive Assistant requiring flue
+01:03:42  [9/15] VIRTUAL LEGAL EXECUTIVE ASSISTANT @ VaVa Virtual Assistants -> rejected: The role is a remote, English-language legal executive assistant position at a virtual ass
+01:03:51  [10/15] Administrative Assistant @ Remote VA -> rejected: The role is a remote administrative assistant position from a virtual assistant agency req
+01:04:43  [11/15] Executive Assistant/Takeoffs @ Remote VA -> rejected: Remote VA is a virtual assistant agency hiring a remote Executive Assistant with construct
+01:05:14  [12/15] Executive Assistant @ Riviera Partners -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:05:28  [13/15] Admin Assistant @ Remote VA -> rejected: Fully remote admin assistant role requiring English fluency, posted by a virtual assistant
+01:06:16  [14/15] Personal/Executive Assistant @ Viewline Ventures -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:06:44  [15/15] Senior Executive Assistant @ TigerConnect -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:06:47  Google Sheet updated: Leads, Rejected, Run Log.
+01:06:47  Run summary: {"Run Time (UTC)": "2026-11-15 00:59", "Trigger": "Schedule (GitHub Actions)", "Fetched": 343, "Passed Keyword Filter": 93, "Already Seen": 77, "Checked by LLM": 15, "Leads Added": 6, "Rejected": 9, "LLM Errors": 0, "Backup AI Used": 0}
+01:06:47  Output: output/run-2026-11-15_0059.json (+ .log and CSV files)
