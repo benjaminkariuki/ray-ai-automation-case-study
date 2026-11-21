@@ -1,0 +1,12 @@
+02:10:07  Run started (Schedule (GitHub Actions)) at 2026-11-21 02:10 UTC
+02:10:08  Settings loaded. Prompt: v1_warm | max jobs: 15
+02:10:28  Fetched 345 postings {'Himalayas': 240, 'RemoteOK': 99, 'Jobicy': 6}
+02:10:29  Keyword filter: 100 matched, 95 already processed, 5 new -> AI (0 deferred to next run)
+02:10:56  [1/5] Executive Assistant @ QC Servion, LLC -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+02:11:32  [2/5] Remote Administrative Assistant @ Health Services of North Texas -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+02:12:10  [3/5] Administrative Assistant @ RecruitGo -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+02:12:18  [4/5] Construction Executive Assistant @ Remote VA -> rejected: The posting is for a remote Construction Executive Assistant role from a virtual assistant
+02:12:45  [5/5] Executive Assistant @ Zumper -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+02:12:48  Google Sheet updated: Leads, Rejected, Run Log.
+02:12:48  Run summary: {"Run Time (UTC)": "2026-11-21 02:10", "Trigger": "Schedule (GitHub Actions)", "Fetched": 345, "Passed Keyword Filter": 100, "Already Seen": 95, "Checked by LLM": 5, "Leads Added": 4, "Rejected": 1, "LLM Errors": 0, "Backup AI Used": 0}
+02:12:48  Output: output/run-2026-11-21_0210.json (+ .log and CSV files)
