@@ -1,0 +1,12 @@
+01:36:46  Run started (Schedule (GitHub Actions)) at 2026-11-23 01:36 UTC
+01:36:47  Settings loaded. Prompt: v1_warm | max jobs: 15
+01:37:05  Fetched 343 postings {'Himalayas': 240, 'RemoteOK': 99, 'Jobicy': 4}
+01:37:06  Keyword filter: 90 matched, 85 already processed, 5 new -> AI (0 deferred to next run)
+01:37:25  [1/5] Administrative Assistant & Outreach Caller @ Any Where Talent -> rejected: The role is a remote administrative assistant position requiring fluent English, posted by
+01:37:50  [2/5] Executive Assistant @ 24x7 Direct -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:38:05  [3/5] Administrative Assistant @ Porch Group -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:38:27  [4/5] Administrative Assistant & Outreach Caller @ Any Where Talent -> rejected: Remote role with Eastern Time hours for an administrative assistant supporting a private e
+01:38:33  [5/5] Executive Assistant, Founder's Office @ Clera -> rejected: Posting describes an on-site Executive Assistant role at an aerospace company written in E
+01:38:35  Google Sheet updated: Leads, Rejected, Run Log.
+01:38:35  Run summary: {"Run Time (UTC)": "2026-11-23 01:36", "Trigger": "Schedule (GitHub Actions)", "Fetched": 343, "Passed Keyword Filter": 90, "Already Seen": 85, "Checked by LLM": 5, "Leads Added": 2, "Rejected": 3, "LLM Errors": 0, "Backup AI Used": 0}
+01:38:35  Output: output/run-2026-11-23_0136.json (+ .log and CSV files)

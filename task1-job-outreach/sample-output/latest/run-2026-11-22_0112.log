@@ -1,8 +1,0 @@
-01:12:33  Run started (Schedule (GitHub Actions)) at 2026-11-22 01:12 UTC
-01:12:34  Settings loaded. Prompt: v1_warm | max jobs: 15
-01:12:50  Fetched 345 postings {'Himalayas': 240, 'RemoteOK': 99, 'Jobicy': 6}
-01:12:50  Keyword filter: 94 matched, 93 already processed, 1 new -> AI (0 deferred to next run)
-01:13:11  [1/1] Executive Assistant @ Chainlink Labs -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
-01:13:13  Google Sheet updated: Leads, Rejected, Run Log.
-01:13:13  Run summary: {"Run Time (UTC)": "2026-11-22 01:12", "Trigger": "Schedule (GitHub Actions)", "Fetched": 345, "Passed Keyword Filter": 94, "Already Seen": 93, "Checked by LLM": 1, "Leads Added": 1, "Rejected": 0, "LLM Errors": 0, "Backup AI Used": 0}
-01:13:13  Output: output/run-2026-11-22_0112.json (+ .log and CSV files)
