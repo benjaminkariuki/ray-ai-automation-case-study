@@ -1,0 +1,9 @@
+02:15:00  Run started (Schedule (GitHub Actions)) at 2026-11-25 02:15 UTC
+02:15:01  Settings loaded. Prompt: v1_warm | max jobs: 15
+02:15:17  Fetched 260 postings {'Himalayas': 240, 'RemoteOK': 18, 'Jobicy': 2}
+02:15:18  Keyword filter: 89 matched, 87 already processed, 2 new -> AI (0 deferred to next run)
+02:15:29  [1/2] Department Administrative Assistant @ MicroSourcing -> rejected: Fully remote role with US hours requirement for an outsourcing agency hiring an administra
+02:16:05  [2/2] Administrative Assistant @ Zealand Pharma -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+02:16:08  Google Sheet updated: Leads, Rejected, Run Log.
+02:16:08  Run summary: {"Run Time (UTC)": "2026-11-25 02:15", "Trigger": "Schedule (GitHub Actions)", "Fetched": 260, "Passed Keyword Filter": 89, "Already Seen": 87, "Checked by LLM": 2, "Leads Added": 1, "Rejected": 1, "LLM Errors": 0, "Backup AI Used": 0}
+02:16:08  Output: output/run-2026-11-25_0215.json (+ .log and CSV files)
