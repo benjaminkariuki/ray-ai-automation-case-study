@@ -1,0 +1,17 @@
+01:45:23  Run started (Schedule (GitHub Actions)) at 2026-11-26 01:45 UTC
+01:45:23  Settings loaded. Prompt: v1_warm | max jobs: 15
+01:45:41  Fetched 260 postings {'Himalayas': 240, 'RemoteOK': 18, 'Jobicy': 2}
+01:45:42  Keyword filter: 94 matched, 84 already processed, 10 new -> AI (0 deferred to next run)
+01:46:00  [1/10] Executive Assistant @ LaunchDarkly -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:46:22  [2/10] Reforestation Administrative Assistant @ Wright Service Corp. -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:46:30  [3/10] Administrative Assistant @ Kairos Power -> rejected: On-site administrative assistant role at a nuclear energy company, written in English, not
+01:46:42  [4/10] Virtual Executive Assistant @ Outsourcery -> rejected: Fully remote EA role placed by an outsourcing agency with UK clients, requiring English an
+01:46:52  [5/10] Executive Assistant – Construction @ BOS Staffing -> rejected: Posted by staffing agency BOS Staffing for a remote executive assistant role at KK Constru
+01:47:19  [6/10] Tech and Society | Senior Executive Assistant & Team Coordin @ Climate Dialogue Japan -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:47:54  [7/10] Sr Administrative Assistant @ RR Donnelley -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:48:03  [8/10] Executive Assistant - C-suite @ Rithum -> rejected: Role requires Dallas Fort Worth location and onsite availability, making it hybrid not ful
+01:48:26  [9/10] Senior Executive Assistant, Office of the CRO (EST / CST) @ GitLab -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:48:51  [10/10] Executive Assistant to the CEO @ NimbleWay -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:48:55  Google Sheet updated: Leads, Rejected, Run Log.
+01:48:55  Run summary: {"Run Time (UTC)": "2026-11-26 01:45", "Trigger": "Schedule (GitHub Actions)", "Fetched": 260, "Passed Keyword Filter": 94, "Already Seen": 84, "Checked by LLM": 10, "Leads Added": 6, "Rejected": 4, "LLM Errors": 0, "Backup AI Used": 0}
+01:48:55  Output: output/run-2026-11-26_0145.json (+ .log and CSV files)
