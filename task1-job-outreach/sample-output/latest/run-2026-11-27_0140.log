@@ -1,0 +1,15 @@
+01:40:27  Run started (Schedule (GitHub Actions)) at 2026-11-27 01:40 UTC
+01:40:28  Settings loaded. Prompt: v1_warm | max jobs: 15
+01:40:46  Fetched 261 postings {'Himalayas': 240, 'RemoteOK': 18, 'Jobicy': 3}
+01:40:46  Keyword filter: 100 matched, 92 already processed, 8 new -> AI (0 deferred to next run)
+01:40:55  [1/8] Administrative Assistant @ Barker Staffing Solutions LLC -> rejected: Remote administrative assistant role for a church via a staffing agency, requiring fluent 
+01:41:16  [2/8] Executive Assistant II @ InnovAge -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:42:10  [3/8] Executive Assistant to VP, Global Named Accounts EMEA @ Autodesk -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:42:40  [4/8] Personal Assistant @ Ruby Labs -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:42:50  [5/8] General Administrative Assistant — Remote | Pacific Time @ Boogie Consulting & Projects -> rejected: Fully remote administrative assistant pool role requiring Pacific Time availability, poste
+01:43:21  [6/8] Administrative Coordinator III - Neurology @ Washington University in St. L -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:43:31  [7/8] Executive Assistant (EA) with QuickBooks Online (QBO) Experi @ Level 9 Virtual -> rejected: Remote role for a virtual-assistant agency hiring an Executive Assistant with QuickBooks e
+01:43:54  [8/8] Senior Administrative Assistant – Executive Support @ Blueprint -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:43:57  Google Sheet updated: Leads, Rejected, Run Log.
+01:43:57  Run summary: {"Run Time (UTC)": "2026-11-27 01:40", "Trigger": "Schedule (GitHub Actions)", "Fetched": 261, "Passed Keyword Filter": 100, "Already Seen": 92, "Checked by LLM": 8, "Leads Added": 5, "Rejected": 3, "LLM Errors": 0, "Backup AI Used": 0}
+01:43:57  Output: output/run-2026-11-27_0140.json (+ .log and CSV files)
