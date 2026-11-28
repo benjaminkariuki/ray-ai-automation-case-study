@@ -1,0 +1,16 @@
+01:20:56  Run started (Schedule (GitHub Actions)) at 2026-11-28 01:20 UTC
+01:20:57  Settings loaded. Prompt: v1_warm | max jobs: 15
+01:21:13  Fetched 262 postings {'Himalayas': 240, 'RemoteOK': 19, 'Jobicy': 3}
+01:21:14  Keyword filter: 91 matched, 82 already processed, 9 new -> AI (0 deferred to next run)
+01:21:19  [1/9] Executive Assistant to Board and Leadership | LATAM @ HireHawk -> rejected: Fully remote EA role for a staffing agency placing with a U.S./Canadian client, requiring 
+01:21:25  [2/9] Administrative Assistant -Junior @ Freelance Latin America -> rejected: Fully remote admin assistant role posted by a staffing agency (Freelance Latin America) pl
+01:21:32  [3/9] Executive Assistant (ENG) @ Berry Virtual | MedVirtual | A -> rejected: Fully remote EA role at a virtual-assistant agency requiring US time-zone availability and
+01:21:52  [4/9] Administrative Assistant (ENG) @ Berry Virtual | MedVirtual | A -> rejected: The posting is for a remote Administrative Assistant role at a virtual assistant agency, w
+01:21:59  [5/9] Executive Assistant to Board and Leadership | Philippines @ HireHawk -> rejected: The posting is for a remote Executive Assistant role placed by a staffing agency, written 
+01:22:05  [6/9] Executive Assistant / Accounts Payable Coordinator (ENG) @ Berry Virtual | MedVirtual | A -> rejected: Fully remote role for a virtual-assistant agency hiring an Executive Assistant with accoun
+01:22:46  [7/9] Remote Personal Assistant (Part-Time): Travel, Lifestyle & L @ Schnell Global -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:22:54  [8/9] 1210 - Executive Assistant @ GoFasti -> rejected: Fully remote executive assistant role placed by a staffing agency, requiring C1/C2 English
+01:23:26  [9/9] Executive Assistant to the Founder @ Smart Suites Pty Ltd -> LEAD (nvidia/nemotron-3-ultra-550b-a55b:free (OpenRouter))
+01:23:28  Google Sheet updated: Leads, Rejected, Run Log.
+01:23:28  Run summary: {"Run Time (UTC)": "2026-11-28 01:20", "Trigger": "Schedule (GitHub Actions)", "Fetched": 262, "Passed Keyword Filter": 91, "Already Seen": 82, "Checked by LLM": 9, "Leads Added": 2, "Rejected": 7, "LLM Errors": 0, "Backup AI Used": 0}
+01:23:28  Output: output/run-2026-11-28_0120.json (+ .log and CSV files)
